@@ -1,0 +1,36 @@
+.control_box {
+    position: fixed;
+    z-index: 3;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    user-select: none;
+    pointer-events: none;
+
+    > div {
+        pointer-events: all;
+        padding: 15px;
+        position: absolute;
+    }
+
+    > .LT {
+        left: 0;
+        top: 60px;
+    }
+
+    > .LB {
+        left: 0;
+        bottom: 80px;
+    }
+
+    > .RT {
+        right: 0;
+        top: 0;
+    }
+
+    > .RB {
+        right: 0;
+        bottom: 80px;
+    }
+}

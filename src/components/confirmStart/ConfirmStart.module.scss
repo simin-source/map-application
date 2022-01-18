@@ -1,0 +1,52 @@
+.confirm_box {
+    display: block;
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 100;
+    top: 0;
+
+    > div {
+        width: 234px;
+        height: 100px;
+        background: #ffffff;
+        border-radius: 20px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding-top: 22px;
+
+        .confirm_text {
+            font-size: 14px;
+            color: #7d7562;
+            text-align: center;
+        }
+
+        .confirm_btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 23px 31px 10px 31px;
+
+            > div {
+                width: 69px;
+                height: 24px;
+                background: #ffffff;
+                border-radius: 20px;
+                text-align: center;
+                border: 1px solid #000;
+
+                &:last-child {
+                    width: 69px;
+                    height: 24px;
+                    background: #7d7562;
+                    border-radius: 10px;
+                    color: #fff;
+                    border: 0;
+                }
+            }
+        }
+    }
+}

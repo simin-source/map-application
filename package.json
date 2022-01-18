@@ -1,0 +1,26 @@
+{
+  "name": "centmap-parking",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite --mode dev",
+    "build": "vue-tsc --noEmit && vite build --mode prod",
+    "build_tst": "vue-tsc --noEmit && vite build --mode test",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "eruda": "2.3.3",
+    "popmotion": "^11.0.0",
+    "vue": "^3.2.16"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "@vitejs/plugin-vue": "^1.9.3",
+    "@vitejs/plugin-vue-jsx": "^1.2.0",
+    "classnames": "^2.3.1",
+    "sass": "^1.43.4",
+    "tslint": "^6.1.3",
+    "typescript": "^4.4.3",
+    "vite": "^2.6.4",
+    "vue-tsc": "^0.3.0"
+  }
+}
