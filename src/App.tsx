@@ -17,8 +17,9 @@ export default () => {
     return <Map />;
 };
 
+// export const mapID = ID ? ID : '155109P'; //宝龙测试
 // export const mapID = ID ? ID : '155109'; //岱山县
-export const mapID = ID ? ID : '195118P'; //太古汇
+export const mapID = ID ? ID : '203116P'; //太古汇
 // export const mapID = ID ? ID : '160110M';   //银泰
 // export const mapID = ID ? ID : '167112M';
 

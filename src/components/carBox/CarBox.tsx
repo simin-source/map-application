@@ -2,7 +2,6 @@ import { MapObject } from "@/map/Map";
 import { defineComponent, reactive } from "vue";
 import { compassState } from "../control/compass/Compass";
 import { FloorState } from "../control/floor/Floor";
-import { StereoscopicState } from "../control/stereoscopic/Stereoscopic";
 import { zoomState } from "../control/zoom/Zoom";
 import { FloorBoxState } from "@/components/floorBox/FloorBox";
 import { SearchState } from "@/components/search/search";
@@ -60,7 +59,6 @@ export const CarState: {
     isCarNum: boolean;
     isCarStart: boolean;
     confirmStart: boolean;
-    isOverview: boolean;
     isNavgate: boolean;
     isNavgateInfo: boolean;
     parkingNum: string;
@@ -71,7 +69,6 @@ export const CarState: {
     isCarNum: false,
     isCarStart: false,
     confirmStart: false,
-    isOverview: false,
     isNavgate: false,
     isNavgateInfo: false,
     parkingNum: '',
@@ -337,7 +334,7 @@ export default defineComponent({
     },
     render() {
         return (
-            <div class={car_box} style={{ display: `${CarState.isCarNum || CarState.isCarBrand || CarState.isCarStart || CarState.isOverview || CarState.isNavgate ? 'block' : 'none'}` }}>
+            <div class={car_box} style={{ display: `${CarState.isCarNum || CarState.isCarBrand || CarState.isCarStart  || CarState.isNavgate ? 'block' : 'none'}` }}>
                 <div class={car_num} style={{ display: `${CarState.isCarNum ? 'flex' : 'none'}` }}>
                     <div>输入车位号 : </div>
                     <input
@@ -514,7 +511,6 @@ export default defineComponent({
                         <div style={{ flexDirection: `${this.isTranslate ? 'column-reverse' : 'column'}` }}>
                             <div>
                                 <p style={{ background: '#5880d0' }}></p>
-                                {/* <input type="text" value={this.CarStart.name} placeholder="请选择起点" /> */}
                                 <input type="text" placeholder="请选择起点" />
                             </div>
                             <div style={{ width: '100%', height: '1px', backgroundColor: '#BBBBBB', padding: '0' }}></div>
@@ -532,7 +528,7 @@ export default defineComponent({
                         <div onClick={() => { this.confirm(false) }}>一键寻车</div>
                     </div>
                 </div>
-                <div class={route_overview} style={{ display: `${CarState.isOverview ? 'flex' : 'none'}` }}>
+                {/* <div class={route_overview} style={{ display: `${CarState.isOverview ? 'flex' : 'none'}` }}>
                     <div>
                         <div><img src={locationUrl} style={{ fontSize: '20px' }} alt='图片找不到' />距离210米</div>
                         <div style={{ marginLeft: '63px' }}><img src={timeUrl} alt='图片找不到' />约2分12秒</div>
@@ -557,7 +553,7 @@ export default defineComponent({
                         <div>模拟导航</div>
                         <div style={{ marginLeft: '45px' }} onClick={() => { CarState.isOverview = false; CarState.isNavgate = true; CarState.isNavgateInfo = true; }}>开始导航</div>
                     </div>
-                </div>
+                </div> */}
                 <div class={navigate} style={{ display: `${CarState.isNavgate ? 'flex' : 'none'}` }}>
                     <div class={'flex-center'}>
                         <div>距离目的地210米</div>
@@ -571,7 +567,6 @@ export default defineComponent({
                                 // 控件显示，注意楼层控件需要在指定图层才能显示
                                 compassState.isShow = true;
                                 zoomState.isShow = true;
-                                StereoscopicState.isShow = true;
                                 MapObject.isCarBtn = true;
                                 if (SearchState.centmap) {
                                     const zoom = SearchState.centmap.getZoom() as number;
@@ -586,7 +581,7 @@ export default defineComponent({
                         >
                             退出
                         </div>
-                        <div style={{ marginLeft: '45px' }} onClick={() => { CarState.isOverview = false; CarState.isNavgate = false; CarState.isNavgateInfo = true; }}>全览</div>
+                        <div style={{ marginLeft: '45px' }} onClick={() => { CarState.isNavgate = false; CarState.isNavgateInfo = true; }}>全览</div>
                     </div>
                 </div>
             </div >

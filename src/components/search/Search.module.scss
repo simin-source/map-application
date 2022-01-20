@@ -1,15 +1,15 @@
 #container {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: auto;
-    overflow: hidden;
-    position: fixed;
-    top: 10px;
+    height: 100%;
     z-index: 99;
+    overflow: hidden;
 
     .search_box {
         width: 100%;
-        height: 50px;
-        padding: 5px 10px;
+        padding: 15px 10px 5px 10px;
         position: relative;
 
         input {
@@ -17,76 +17,212 @@
             height: 40px;
             border-radius: 10px;
             padding-left: 30px;
-            background-color: rgba($color: #000, $alpha: 0);
-            border: 1px solid #ffe5a7;
+            background: #fefefe;
+            border: 1px solid #7d7562;
+            background-color: rgba(254, 254, 254, 0.8);
         }
 
         ::-webkit-input-placeholder {
             /* WebKit, Blink, Edge */
             font-size: 13px;
-            color: #ffe5a7;
+            color: #7d7562;
         }
         :-moz-placeholder {
             /* Mozilla Firefox 4 to 18 */
             font-size: 13px;
-            color: #ffe5a7;
+            color: #7d7562;
         }
         ::-moz-placeholder {
             /* Mozilla Firefox 19+ */
             font-size: 13px;
-            color: #ffe5a7;
+            color: #7d7562;
         }
         :-ms-input-placeholder {
             /* Internet Explorer 10-11 */
             font-size: 13px;
-            color: #ffe5a7;
+            color: #7d7562;
         }
 
         .icon {
             position: absolute;
-            top: 15px;
+            top: 26px;
             left: 18px;
             width: 20px;
             height: 20px;
+        }
+
+        .close_search {
+            position: absolute;
+            top: 28px;
+            right: 18px;
+            width: 20px;
+            height: 20px;
+
+            i {
+                font-weight: bold;
+            }
+        }
+    }
+
+    .search_type {
+        height: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        background: #fff;
+
+        > div {
+            width: 50%;
+            height: 40px;
+            text-align: center;
+            line-height: 35px;
+
+            > div {
+                color: #7d7562;
+                font-size: 13px;
+                margin-right: 8px;
+                position: relative;
+            }
+        }
+
+        .type_active {
+            div::after {
+                content: "";
+                width: 50px;
+                height: 2px;
+                background: #7d7562;
+                position: absolute;
+                top: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
         }
     }
 
     .hot_recommend {
         width: 100%;
-        height: 20px;
+        height: 177px;
         display: flex;
+        flex-direction: column;
         justify-content: flex-start;
-        align-items: center;
+        align-items: flex-start;
         padding: 5px 25px;
+        background: #a6a091;
+        border-radius: 0px 0px 10px 10px;
 
         > div:first-child {
             font-size: 12px;
             color: #fff;
+            flex-wrap: wrap;
+            align-items: center;
+
+            .recommend_list {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+
+                > div {
+                    width: auto;
+                    height: 20px;
+                    line-height: 20px;
+                    text-align: center;
+                    // background-color: #ffbe44;
+                    color: #fff;
+                    border-radius: 10px;
+                    font-size: 12px;
+                    margin-left: 10px;
+                }
+            }
         }
 
-        .recommend_list {
+        > div:last-child {
+            width: 100%;
+            height: auto;
+
+            .history_title {
+                width: auto;
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 0;
+                border-bottom: 1px solid #bbb;
+
+                > div {
+                    font-size: 12px;
+                    color: #fce2a6;
+                }
+
+                > div:last-child {
+                    font-size: 13px;
+                    color: #ffffff;
+                }
+            }
+            .sort_list {
+                > div {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 0 15px;
+
+                    .sort_item {
+                        position: relative;
+
+                        > div:first-child {
+                            width: 70px;
+                            height: 30px;
+                            font-size: 12px;
+                            text-align: center;
+                            line-height: 30px;
+                            color: #fff;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .floor_content {
+        width: 100%;
+        height: auto;
+        background: #a6a091;
+        border-radius: 0px 0px 10px 10px;
+
+        > div {
+            height: 40px;
+            border-bottom: 1px solid #ddd;
             display: flex;
             justify-content: flex-start;
             align-items: center;
+            font-size: 13px;
+            padding: 0 15px;
+            color: #fff;
 
             > div {
-                width: auto;
-                height: 20px;
-                line-height: 20px;
-                text-align: center;
-                // background-color: #ffbe44;
-                color: #fff;
-                border-radius: 10px;
-                font-size: 12px;
-                margin-left: 10px;
+                margin-right: 25px;
+                font-size: 13px;
+
+                &:first-child {
+                    font-weight: 500;
+                    font-size: 14px;
+                }
             }
+
+            &:last-child {
+                border-bottom: 0px;
+            }
+        }
+
+        .floor_active {
+            color: #FFE5A7;
+            border-bottom: 1px solid #FFE5A7;
         }
     }
 
     .sort_content {
         width: 100%;
         height: auto;
-        padding: 5px 10px;
+        background: #a6a091;
+        border-radius: 0px 0px 10px 10px;
 
         > div {
             width: 100%;
@@ -182,11 +318,6 @@ body {
     #container {
         .search_box {
             padding: 5px 10px;
-
-            .icon {
-                top: 15px;
-                left: 18px;
-            }
         }
 
         .hot_recommend {

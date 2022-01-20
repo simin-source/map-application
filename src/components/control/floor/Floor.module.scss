@@ -68,8 +68,9 @@
                 font-size: 12px;
 
                 &.active {
-                    color: #7d7562;
-                    font-weight: bolder;
+                    background: rgba(125, 117, 98, 0.7);
+                    color: #fff;
+                    font-weight: bold;
                 }
             }
         }

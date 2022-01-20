@@ -1,29 +1,30 @@
 import { defineComponent, reactive } from 'vue';
 
 import { dataURL, mapID } from '@/App';
+import ConfirmStart from '@/components/confirmStart/ConfirmStart';
 import Control from '@/components/control/Index';
 import Compass, { compassState } from '@/components/control/compass/Compass';
 import Floor, { FloorState } from '@/components/control/floor/Floor';
-import Stereoscopic, { StereoscopicState } from '@/components/control/stereoscopic/Stereoscopic';
 import Zoom, { zoomState } from '@/components/control/zoom/Zoom';
-import { MiniBox } from '@/components/miniBox/MiniBox';
 import { Loading } from '@/components/loading/Loading';
+import { MiniBox } from '@/components/miniBox/MiniBox';
 import Search, { SearchState } from '@/components/search/search';
 import StoreBox, { StoreState } from '@/components/storeBox/StoreBox';
-import FloorBox, { FloorBoxState } from '@/components/floorBox/FloorBox';
-import ConfirmStart from '@/components/confirmStart/ConfirmStart';
-
-import { mapManager } from './MapManager';
-import carImg from '@/assets/img/car.png';
+import RightSet, { RightBoxState } from '@/components/rightSet/RightSet';
+import { navigationEnd } from '@/components/navigationEnd/NavigationEnd';
 import arrowLeftUrl from '@/assets/img/arrow_left.png';
+import toCarImgUrl from '@/assets/img/toCar.png';
+import rightSetUrl from '@/assets/img/rightSet.png';
+import { mapManager } from './MapManager';
 
-import {
-    container, map_container, car_button, back, audio
-} from './Map.module.scss';
 import CarBox, { CarState } from '@/components/carBox/CarBox';
 import { navigation, NavigationInfoBox } from '@/components/navInfo/NavInfo';
-import PlanBox, { planState } from '@/components/routePlanBox/PlanBox';
 import { PointMark } from '@/components/pointMark/PointMark';
+import PlanBox, { planState } from '@/components/planBox/PlanBox';
+import {
+  car_button, container, map_container, right_set
+} from './Map.module.scss';
+import { PointType } from '@/types';
 
 export const MapControlSpace: {
     T?: number;
@@ -47,14 +48,20 @@ interface PoiInfoType {
 
 export const MapObject: {
     Cmap: any;
-    currentMark: any;
+    currentInfoBox: any;
+    startMarker: any;
+    endMarker: any;
+    previewMarker: any;
     isCarBtn: boolean;
-    isBackIndex: boolean;
+    showRightSet: boolean;
 } = reactive({
     Cmap: {},
-    currentMark: {},
-    isCarBtn: true,
-    isBackIndex: false,
+    currentInfoBox: {},
+    startMarker: {},
+    endMarker: {},
+    previewMarker: {},
+    isCarBtn: false,
+    showRightSet: true,
 });
 
 export default defineComponent({
@@ -69,7 +76,6 @@ export default defineComponent({
                 </Control.LT>
                 <Control.RB space={B}>
                     <Zoom />
-                    <Stereoscopic />
                 </Control.RB>
                 <Control.LB space={B}>
                     <Floor />
@@ -77,61 +83,41 @@ export default defineComponent({
             </Control.BOX>
             <Search />
             <StoreBox />
-            <FloorBox />
             <CarBox />
             <ConfirmStart />
             <NavigationInfoBox />
             <PlanBox />
-            <div class={back} style={{ display: `${MapObject.isBackIndex ? 'block' : 'none'}` }}>
-                <img src={arrowLeftUrl} alt="图片找不到" onClick={() => {
-                    SearchState.isShowSearch = true;
-                    // 隐藏poi弹框,建筑弹框
-                    MapObject.currentMark.hide();
-                    StoreState.isStoreBox = false;
-                    // 控件显示，注意楼层控件需要在指定图层才能显示
-                    compassState.isShow = true;
-                    zoomState.isShow = true;
-                    StereoscopicState.isShow = true;
-                    MapObject.isCarBtn = true;
-                    if (SearchState.centmap) {
-                        const zoom = SearchState.centmap.getZoom() as number;
-                        if (zoom > 0.346) {
-                            FloorState.isShow = true;
-                            FloorBoxState.isShow = true;
-                            FloorBoxState.isSearchRes = false;
-                            FloorBoxState.FloorBoxTitle = 'F1 | 广州太古汇';
-                        }
-                    }
-                    MapObject.isBackIndex = false;
-                    // 隐藏路径规划页
-                    planState.isPlan = false;
-                    planState.isRouteInfo = false;
-                }} />
+            <navigationEnd.infoBox />
+            <RightSet />
+            <div
+                class={right_set}
+                style={{ display: `${MapObject.showRightSet ? 'flex' : 'none'}` }}
+                onClick={() => { RightBoxState.isShow = true; }}
+            >
+                <img src={rightSetUrl} alt="图片找不到" />
             </div>
             <div
-                class={car_button}
+                class={`flex-center ${car_button}`}
                 style={{ display: `${MapObject.isCarBtn ? 'flex' : 'none'}` }}
                 onClick={() => {
                     // 控件都隐藏
                     compassState.isShow = false;
                     FloorState.isShow = false;
                     zoomState.isShow = false;
-                    StereoscopicState.isShow = false;
                     MapObject.isCarBtn = false;
                     SearchState.isShowSearch = false;
+                    MapObject.showRightSet = false;
                     CarState.isCarBrand = true;
                 }}
             >
-                <img src={carImg} alt='图片找不到' />
+                <img src={toCarImgUrl} alt="图片找不到" />
             </div>
-            {/* <div class={audio}>
-                <audio src="audioSrc" muted autoplay onCanplay={() => { }} onEnded={() => { }} ></audio>
-            </div> */}
         </div >;
     },
     mounted() {
         // @ts-ignore
         window.cmapload = map => {
+            // 初始化
             const Cmap = map.init(map_container, {
                 mapSource: `${dataURL}${mapID}`,
                 defaultControl: false,
@@ -139,23 +125,24 @@ export default defineComponent({
                 angle: -180,
                 zoom: 0.25,
             });
+            mapManager.init(Cmap);
             MapObject.Cmap = Cmap;
             console.log(Cmap);
 
             Cmap.on('complete', (res: { info: string }) => {
                 Loading.hide();
             });
-            mapManager.init(Cmap);
-            const destinationMarker = new PointMark('target');
-            const currentMarker = new PointMark('current', 'start');
-            MapObject.currentMark = new MiniBox('currentBrand');
+
+            // 添加地图节点对象
+            MapObject.endMarker = new PointMark('target');
+            MapObject.startMarker = new PointMark('current', 'start');
+            MapObject.currentInfoBox = new MiniBox('currentBrand');
+            MapObject.previewMarker = new PointMark('preview', 'preview');
+
             Cmap.on('click', ({ info }: { info: any }) => {
                 console.log(info);
                 const { lnglat, cat_id, center, fl_name, rdFl = 0, index, seqId, name } = info;
-                if (!cat_id || [400000].includes(cat_id)) return;
-                // if (
-                //     !cat_id || ![500000, 124001001, 124002001, 124014001, 124004001, 124003001].includes(cat_id)
-                // ) return;
+                if (!cat_id || [400000].includes(cat_id)) return; // 不可点击的数据
                 const [lng, lat, height] = [500000, 122005002].includes(cat_id) ? lnglat : center;
                 const markData = {
                     location: [lng, lat] as [number, number],
@@ -164,41 +151,16 @@ export default defineComponent({
                     fl_name,
                     name,
                 };
+                StoreState.currentPoint = markData;
+                MapObject.previewMarker.show(markData);
+                MapObject.currentInfoBox.show(markData, info);
                 if (navigation.isMock) {
-                    StoreState.currentPoint = markData;
-                    navigation.mockStartPoint = markData;
-                    currentMarker.show(markData);
+                    // 确认起点
+                    CarState.confirmStart = true;
+                    StoreState.startPoint = markData;
                 } else {
-                    MapObject.currentMark.show(markData, info);
-                    navigation.destination(markData, true);
-                    destinationMarker.show(markData);
+                    StoreState.endPoint = markData;
                 }
-
-                // if (![200000, 122005002, 109014001].includes(cat_id)) {
-                //     MapObject.currentMark.show(markData, info);
-                // } else {
-                //     MapObject.currentMark.hide();
-                //     if (cat_id === 109014001 && typeof rdFl === 'number') {
-                //         // 停车位
-                //         const [lng, lat, height] = center;
-                //         const markData = {
-                //             location: [lng, lat] as [number, number],
-                //             height,
-                //             rdFl,
-                //             resource: info,
-                //         };
-
-                //         // 控件都隐藏
-                //         compassState.isShow = false;
-                //         FloorState.isShow = false;
-                //         zoomState.isShow = false;
-                //         StereoscopicState.isShow = false;
-                //         MapObject.isCarBtn = false;
-                //         FloorBoxState.isShow = false;
-
-                //         const floor = Cmap.getFloorInfo(seqId);//floor.isPark判断是否园区，floor.list所在楼层
-                //     }
-                // }
 
                 // 判断是否有高亮
                 if (Cmap.shader.has(fl_name, seqId, cat_id, index)) {
@@ -210,5 +172,5 @@ export default defineComponent({
             });
         };
         import('@/assets/main.dart.js');
-    }
+    },
 });

@@ -1,8 +1,9 @@
-import { defineComponent, reactive } from "vue";
+import { defineComponent, reactive, watch } from "vue";
 import { CarState, newDestination } from '@/components/carBox/CarBox';
-import { planState } from '../routePlanBox/PlanBox';
+import { planState } from '../planBox/PlanBox';
 import {
-    navInfo_box, nav_img, nav_meter, car_nav, store_nav, select_start
+    navInfo_box, nav_img, nav_meter, car_nav, store_nav, select_start, layer,
+    car_remain, cur_floor, exit, remain_meter
 } from './NavInfo.module.scss';
 
 import transformUrl from '@/assets/img/transform.png';
@@ -16,6 +17,13 @@ import { voiceManager } from "@/components/voice/Voice";
 import { navigationEnd } from "@/components/navigationEnd/NavigationEnd";
 import { angle2Radian } from "@/utils/base";
 import { StoreState } from "@/components/storeBox/StoreBox";
+import { MapObject } from "@/map/Map";
+import { Centmap } from "@/native/Centmap";
+import Icon from "@/components/icon/Icon";
+import { compassState } from "../control/compass/Compass";
+import { zoomState } from "../control/zoom/Zoom";
+import { FloorState } from "../control/floor/Floor";
+import { SearchState } from "../search/search";
 
 export const navInfoState: {
     onNav?: () => void;
@@ -27,7 +35,7 @@ export const navInfoState: {
         distance: number;
         id: string;
     };
-    // curStepInfo?: CurStepInfoType;
+    curStepInfo?: CurStepInfoType;
     curPathInfo?: {
         icon: string;
         description: string;
@@ -58,51 +66,218 @@ let naviEnd = false;
 let crossLnglat: [number, number] | undefined;
 let crossCurrPathEndPoint: [number, number] | undefined;
 
-// function clearNavInfoState() {
-//     playMomentInfo = tempPlayMomentInfo = '';
-//     navInfoState.instructions = navInfoState.curStepRemain_info = navInfoState.curStepInfo = navInfoState.curPathInfo = undefined;
+function clearNavInfoState() {
+    playMomentInfo = tempPlayMomentInfo = '';
+    navInfoState.instructions = navInfoState.curStepRemain_info = navInfoState.curStepInfo = navInfoState.curPathInfo = undefined;
 
-//     navInfoState.isMock = navInfoState.pathRemainDistance = navInfoState.curPathRemainDistance = navInfoState.curPathDistance = navInfoState.curPathWheelInfo = undefined;
-//     navInfoState.mockReady = false;
-//     navInfoState.pathDistance = 0;
-//     navInfoState.onExit = navInfoState.onNav = navInfoState.onClose = navInfoState.runMock = undefined;
-// }
+    navInfoState.isMock = navInfoState.pathRemainDistance = navInfoState.curPathRemainDistance = navInfoState.curPathDistance = navInfoState.curPathWheelInfo = undefined;
+    navInfoState.mockReady = false;
+    navInfoState.pathDistance = 0;
+    navInfoState.onExit = navInfoState.onNav = navInfoState.onClose = navInfoState.runMock = undefined;
+}
 
 
-export const NavigationInfoBox =defineComponent({
+export const NavigationInfoBox = defineComponent({
     name: 'NavInfo',
     data() {
         return {
             isTranslate: false,
         }
     },
+    mounted() {
+        watch(() => navInfoState.pathRemainDistance, pathRemainDistance => {
+            // 监听导航信息变化
+            if (typeof pathRemainDistance === 'number') {
+                this.voiceMoment(pathRemainDistance);
+            }
+        });
+    },
+    methods: {
+        close(bearing?: number) {
+            if (navInfoState.onClose) navInfoState.onClose(bearing);
+        },
+        voiceMoment(remain_distance: number) {
+            const { curPathDistance, curPathWheelInfo } = navInfoState;
+            if (remain_distance <= (navInfoState.isMock ? 2 : 5)) {
+                console.log('导航结束');
+                if (naviEnd) return;
+                naviEnd = true;
+                navInfoState.curPathInfo = {
+                    icon: 'arrive',
+                    description: '您的车位就在附近',
+                };
+                if (navigation.navDestination && !navInfoState.isMock) {
+                    const pNumStr = `${navigation.navDestination.resource.number}`;
+                    Centmap.navEnd(pNumStr);
+                }
+                navigationEnd.show('目的地');
+                navigationEnd.onConfirm(() => {
+                    navigationEnd.hide();
+                    naviEnd = false;
+                });
+                this.close();
+                if (navigation.targetParkingNum) sessionStorage.setItem('curParkingNum', navigation.targetParkingNum);
+            } else {
+                console.log('导航播放开始');
+                this.initCurPathInfo(curPathWheelInfo ? curPathWheelInfo.toString() : '');
+                // 处理语音播报内容
+                let voiceText = navInfoState.curPathInfo ? `${navInfoState.curPathInfo.description}${curPathDistance}米` : '';
+                voiceManager.play(voiceText.replace('行', '形'));
+            }
+        },
+        initCurPathInfo(keyword?: string) {
+            if (!keyword) {
+                navInfoState.curPathInfo = {
+                    icon: 'straight',
+                    description: '沿着当前道路前行',
+                };
+                return;
+            }
+            switch (true) {
+                case keyword.includes('右前'):
+                    navInfoState.curPathInfo = {
+                        icon: 'right-front',
+                        description: '前方右转',
+                    };
+                    break;
+                case keyword.includes('右后'):
+                    navInfoState.curPathInfo = {
+                        icon: 'right-rear',
+                        description: '前方右转',
+                    };
+                    break;
+                case keyword.includes('右'):
+                    navInfoState.curPathInfo = {
+                        icon: 'Turn-right',
+                        description: '前方右转',
+                    };
+                    break;
+                case keyword.includes('左前'):
+                    navInfoState.curPathInfo = {
+                        icon: 'left-front',
+                        description: '前方左转',
+                    };
+                    break;
+                case keyword.includes('左后'):
+                    navInfoState.curPathInfo = {
+                        icon: 'left-rear',
+                        description: '前方左转',
+                    };
+                    break;
+                case keyword.includes('左'):
+                    navInfoState.curPathInfo = {
+                        icon: 'Turn-left',
+                        description: '前方左转',
+                    };
+                    break;
+                case keyword.includes('上楼'):
+                    navInfoState.curPathInfo = {
+                        icon: 'upstairs',
+                        description: keyword,
+                    };
+                    break;
+                case keyword.includes('下楼'):
+                    navInfoState.curPathInfo = {
+                        icon: 'downstairs',
+                        description: keyword,
+                    };
+                    break;
+                case keyword.includes('通过门'):
+                    navInfoState.curPathInfo = {
+                        icon: 'door',
+                        description: keyword,
+                    };
+                    break;
+                case keyword.includes('调头'):
+                    navInfoState.curPathInfo = {
+                        icon: 'Turn-around',
+                        description: keyword,
+                    };
+                    break;
+                default:
+                    // keyword.includes('直行'):
+                    navInfoState.curPathInfo = {
+                        icon: 'straight',
+                        description: '沿着当前道路前行',
+                    };
+                    break;
+            }
+        },
+    },
     render() {
+        const { pathDistance, pathRemainDistance, curPathRemainDistance, curPathInfo, isMock, runMock, mockReady } = navInfoState;
         return <div class={navInfo_box} style={{ display: `${CarState.isNavgateInfo || planState.isRouteInfo ? 'flex' : 'none'}` }}>
             <div class={store_nav} style={{ display: `${planState.isRouteInfo ? 'flex' : 'none'}` }}>
                 <div class={select_start}>
                     <div style={{ flexDirection: `${this.isTranslate ? 'column-reverse' : 'column'}` }}>
                         <div>
                             <p style={{ background: '#5880d0' }}></p>
-                            <input type="text" value={StoreState.currentPoint?.name} placeholder="我的位置" />
+                            <input type="text" value={StoreState.startPoint?.name} placeholder="我的位置" />
                         </div>
                         <div style={{ width: '100%', height: '1px', backgroundColor: '#BBBBBB', padding: '0' }}></div>
                         <div>
                             <p style={{ background: '#D05858' }}></p>
-                            <input type="text" value='1-12' readonly />
+                            <input type="text" value={StoreState.endPoint?.name} readonly />
                         </div>
                     </div>
                     <div style={{ marginLeft: '10px' }} onClick={() => { this.isTranslate = !this.isTranslate; }}>
                         <img src={transformUrl} style={{ width: '20px' }} alt='图片找不到' />
                     </div>
                 </div>
+                <div>请输入或点击地图选择起点</div>
             </div>
-            <div class={car_nav} style={{ display: `${CarState.isNavgateInfo ? 'flex' : 'none'}` }}>
-                <div class={nav_img}>
-                    <img src={arrowUrl} alt='图片找不到' />
+            <div class={layer} style={{ display: `${CarState.isNavgateInfo ? 'flex' : 'none'}` }}>
+                <div class={car_nav}>
+                    <div class={nav_img}>
+                        <Icon type={curPathInfo ? curPathInfo.icon : 'Turn-right'} color="#7D7562" size={62} />
+                        {/* <img src={arrowUrl} alt='图片找不到' /> */}
+                    </div>
+                    <div class={nav_meter}>
+                        <div>{curPathInfo?.description}</div>
+                        <div>{pathDistance}米</div>
+                    </div>
                 </div>
-                <div class={nav_meter}>
-                    <div>沿着当前道路直行</div>
-                    <div>50米</div>
+                <div class={car_remain}>
+                    <div class={cur_floor}>当前楼层: L3</div>
+                    <div>
+                        <div class={exit} onClick={() => {
+                            if (navInfoState.onClose) navInfoState.onClose();
+                            CarState.isNavgateInfo = false;
+                            // 控件显示，注意楼层控件需要在指定图层才能显示
+                            MapObject.showRightSet = true;
+                            SearchState.isShowSearch = true;
+                            compassState.isShow = true;
+                            zoomState.isShow = true;
+                            MapObject.isCarBtn = true;
+                            if (SearchState.centmap) {
+                                const zoom = SearchState.centmap.getZoom() as number;
+                                if (zoom > 0.346) {
+                                    FloorState.isShow = true;
+                                }
+                            }
+                            // 隐藏清空
+                            MapObject.endMarker.hide();
+                            MapObject.startMarker.hide();
+                            StoreState.currentPoint = {
+                                location: [0, 0],
+                                rdFl: 0,
+                            };
+                            StoreState.startPoint = {
+                                location: [0, 0],
+                                rdFl: 0,
+                            };
+                            StoreState.endPoint = {
+                                location: [0, 0],
+                                rdFl: 0,
+                            };
+                        }}>
+                            退出
+                        </div>
+                        <div class={remain_meter}>
+                            <div>目的地: 停车场</div>
+                            <div>剩余{pathRemainDistance}米</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div >;
@@ -124,7 +299,7 @@ export class Navigation {
             this._centmap = centmap;
             const line = this._navLine = new NavLine(centmap);
             console.log(line);
-            
+
             line.onLocate = info => {
                 const { curPathRemainDistance, remainDistance, curPathDistance, curPathWheelInfo, cmapCoord, direction, endPoint, rdFl } = info;
                 this.currentPositionInfo = {
@@ -142,7 +317,7 @@ export class Navigation {
             };
         });
         // @ts-ignore
-        window.cmap_judgeCoord = (lat: number , lng: number) => {
+        window.cmap_judgeCoord = (lat: number, lng: number) => {
             if (!this._centmap || !lat || !lng) return;
             const cmapCoord = this._centmap.wgs84ToCmapCoord(lng, lat);
             const contains = this._centmap.contains(cmapCoord[0], cmapCoord[1]);
@@ -165,15 +340,15 @@ export class Navigation {
         pitch?: number;
         fixed: boolean;
     } = {
-        fixed: false,
-    };
+            fixed: false,
+        };
 
     private locationNodeDeviate = false; //导航偏离
 
-    destination(point: PointType, mock:boolean) {
+    destination(point: PointType, mock: boolean) {
         const { _centmap } = this;
         if (!_centmap) return;
-        const destination = _centmap.cmapCoordToWGS84(...point.location); 
+        const destination = _centmap.cmapCoordToWGS84(...point.location);
         this.navPoints.end = point;
         if (mock) {
             navInfoState.isMock = true;
@@ -336,6 +511,7 @@ export class Navigation {
         const { _navLine } = this;
         const { start, end } = this.navPoints;
         if (!_navLine || !start || !end) return;
+
         const info = await _navLine.draw(...start.location, start.rdFl, ...end.location, end.rdFl);
         if (info) navInfoState.pathDistance = +info.distance.toFixed(0);
         // LocationButtonState.active = false;
@@ -351,14 +527,14 @@ export class Navigation {
             const cmapCoord = this._centmap.wgs84ToCmapCoord(...gps);
             const point = this._navLine.getAdsorbPoint(cmapCoord);
             if (!point) return;
-            const [ lng, lat, distance, rdFl ] = point as [number, number, number, number];
+            const [lng, lat, distance, rdFl] = point as [number, number, number, number];
             this.locationNodeDeviate = distance > 14;
             if (this.locationNodeDeviate) {
                 this._navLine.anchorLocation(cmapCoord);
                 // this._centmap.moveTo(...cmapCoord);
                 // driftCorrection.running(gps);
                 // crossImageTip.close();
-            } 
+            }
             // else driftCorrection.close();
             this._navLine.locate([lng, lat, rdFl]);
         });
@@ -400,10 +576,18 @@ export class Navigation {
         if (!_navLine || !_centmap) return;
         Navigation.naving = true;
         // LocationButtonState.active = false;
-        if (navInfoState.pathDistance > 50) {
-            // 语音播报开始导航
-            voiceManager.play(text ? text : '开始车位导航，请减速慢行', true);
-        }
+        // if (navInfoState.pathDistance > 50) {
+        // 语音播报开始导航
+        voiceManager.play(text ? text : '开始车位导航，请减速慢行', true);
+        // }
+        console.log('开始导航');
+        // console.log(navInfoState.pathDistance);
+        // 隐藏起点选择框和优化推荐框
+        planState.isPlan = false;
+        planState.isRouteInfo = false;
+        StoreState.isStoreBox = false;
+        CarState.isNavgateInfo = true;
+        //显示实时导航弹框
         _navLine.runMock();
         navInfoState.onClose = (bearing?: number) => {
             this.clear();
@@ -443,7 +627,7 @@ export class Navigation {
         this.locationNodeDeviate = false;
         this.navPoints = {};
         // LocationButtonState.active = false;
-        // clearNavInfoState();
+        clearNavInfoState();
         // crossImageTip.quit();
         if (this._navLine) this._navLine.clear();
         if (!!this._onClose.length) {

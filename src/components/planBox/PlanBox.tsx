@@ -9,6 +9,7 @@ import straightUrl from '@/assets/img/straight.png';
 import staircaseUrl from '@/assets/img/staircase.png';
 import { navInfoState } from "../navInfo/NavInfo";
 import { mapManager } from "@/map/MapManager";
+import { MapObject } from "@/map/Map";
 
 export const planState: {
     isPlan: boolean;
@@ -22,27 +23,28 @@ export default defineComponent({
     name: "PlanBox",
     data: function () {
         return {
-            planContent: [{
-                img: '',
-                type: '智能推荐',
-                meter: '253米',
-                time: '5分钟',
-            }, {
-                img: straightUrl,
-                type: '直梯优先',
-                meter: '220米',
-                time: '3分钟',
-            }, {
-                img: staircaseUrl,
-                type: '扶梯优先',
-                meter: '201米',
-                time: '4分钟',
-            }],
-            currentPlan: 0,
+            // planContent: [{
+            //     img: '',
+            //     type: '智能推荐',
+            //     meter: '253米',
+            //     time: '5分钟',
+            // }, {
+            //     img: straightUrl,
+            //     type: '直梯优先',
+            //     meter: '220米',
+            //     time: '3分钟',
+            // }, {
+            //     img: staircaseUrl,
+            //     type: '扶梯优先',
+            //     meter: '201米',
+            //     time: '4分钟',
+            // }],
+            // currentPlan: 0,
         };
     },
     methods: {
         runNav() {
+            MapObject.currentInfoBox.hide();
             const { onNav, isMock, runMock } = navInfoState;
             mapManager.onReady(centmap => {
                 const angle = centmap.getAngle();
@@ -58,7 +60,7 @@ export default defineComponent({
     render() {
         return (
             <div class={plan_box} style={{ display: `${planState.isPlan ? 'block' : 'none'}` }}>
-                <div class={plan_type}>
+                {/* <div class={plan_type}>
                     {this.planContent?.map((item, index) => {
                         return <div class={`${this.currentPlan === index ? active : ''}`} onClick={() => { this.currentPlan = index; }}>
                             {item.img ? <div class='flex-center'>
@@ -69,10 +71,10 @@ export default defineComponent({
                             <div>{item.time}</div>
                         </div>;
                     })}
-                </div>
+                </div> */}
                 <div class={route_btn}>
                     <div>目的地位于W层</div>
-                    <div onClick={() => { this.runNav()}}>开始导航</div>
+                    <div onClick={() => { this.runNav() }}>开始导航</div>
                 </div>
             </div>
         );

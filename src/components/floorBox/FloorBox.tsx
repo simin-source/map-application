@@ -15,41 +15,45 @@ export const FloorBoxState: {
     isShow: Boolean;
     FloorBoxTitle: String;
     isSearchRes: Boolean;
+    currentTypeIndex: Number;
+    lookStoreType: any[];
 } = reactive({
     isSpread: false,
     isShow: false,
     FloorBoxTitle: 'WU | 广州太古汇',
     isSearchRes: false,
+    currentTypeIndex: 0,
+    lookStoreType: [],
 });
 
 export default defineComponent({
     name: 'FloorBox',
     data() {
         return {
-            lookStoreType: [
-                {
-                    type: 1,
-                    name: '全部',
-                    number: 100,
-                }, {
-                    type: 2,
-                    name: '男装',
-                    number: 38,
-                }, {
-                    type: 3,
-                    name: '女装',
-                    number: 6,
-                }, {
-                    type: 4,
-                    name: '设施',
-                    number: 7,
-                }, {
-                    type: 5,
-                    name: '珠宝/钟表/饰品',
-                    number: 7,
-                }
-            ],
-            currentTypeIndex: 0,
+            // lookStoreType: [
+            //     {
+            //         type: 1,
+            //         name: '全部',
+            //         number: 100,
+            //     }, {
+            //         type: 2,
+            //         name: '男装',
+            //         number: 38,
+            //     }, {
+            //         type: 3,
+            //         name: '女装',
+            //         number: 6,
+            //     }, {
+            //         type: 4,
+            //         name: '设施',
+            //         number: 7,
+            //     }, {
+            //         type: 5,
+            //         name: '珠宝/钟表/饰品',
+            //         number: 7,
+            //     }
+            // ],
+            // currentTypeIndex: 0,
             storeList: [
                 {
                     sort: '全部',
@@ -90,6 +94,31 @@ export default defineComponent({
             ]
         }
     },
+    created() {
+        FloorBoxState.lookStoreType = [
+            {
+                type: 1,
+                name: '全部',
+                number: 100,
+            }, {
+                type: 2,
+                name: '男装',
+                number: 38,
+            }, {
+                type: 3,
+                name: '女装',
+                number: 6,
+            }, {
+                type: 4,
+                name: '设施',
+                number: 7,
+            }, {
+                type: 5,
+                name: '珠宝/钟表/饰品',
+                number: 7,
+            }
+        ];
+    },
     methods: {
         workState(id: number) {
             switch (id) {
@@ -105,8 +134,9 @@ export default defineComponent({
         },
     },
     render() {
-        return <div class={floor_box} style={{ height: `${FloorBoxState.isSpread ? '100%' : '80px'}`, display: `${FloorBoxState.isShow ? 'block' : 'none'}` }}>
-            <div class={spread_icon}>
+        return <div class={floor_box} style={{ display: `${FloorBoxState.isShow ? 'block' : 'none'}` }}>
+            {/* return <div class={floor_box} style={{ height: `${FloorBoxState.isSpread ? '100%' : '20px'}`, display: `${FloorBoxState.isShow ? 'block' : 'none'}` }}> */}
+            {/* <div class={spread_icon}>
                 <img
                     src={spreadIcon}
                     alt='图片找不到'
@@ -117,8 +147,8 @@ export default defineComponent({
                         MapObject.isCarBtn = false;
                     }}
                 />
-            </div>
-            <div
+            </div> */}
+            {/* <div
                 class={close}
                 style={{ display: `${FloorBoxState.isSpread ? 'block' : 'none'}` }}
                 onClick={() => {
@@ -128,19 +158,19 @@ export default defineComponent({
                 }}
             >
                 <img src={arrowLeftUrl} alt='图片找不到'/>
-            </div>
+            </div> */}
             <div class={floor_content}>
-                <div class={floor_title} style={{ height: `${FloorBoxState.isSpread ? '60px' : '70px'}` }}>
+                {/* <div class={floor_title} style={{ height: `${FloorBoxState.isSpread ? '60px' : '70px'}` }}>
                     {FloorBoxState.FloorBoxTitle}
-                </div>
+                </div> */}
                 <div class={store_list}>
                     <div style={{ display: `${FloorBoxState.isSearchRes ? 'none' : 'block'}` }}>该层全部商户</div>
                     <div class={store_type} style={{ display: `${FloorBoxState.isSearchRes ? 'none' : 'flex'}` }}>
-                        {this.lookStoreType.map((item, index) => {
+                        {FloorBoxState.lookStoreType?.map((item, index) => {
                             return <div
-                                class={`${this.currentTypeIndex === index ? active : ''}`}
+                                class={`${FloorBoxState.currentTypeIndex === index ? active : ''}`}
                                 onClick={() => {
-                                    this.currentTypeIndex = index;
+                                    FloorBoxState.currentTypeIndex = index;
                                     if (item.type === 4) {
                                         // 楼层设施
                                         this.storeList = [

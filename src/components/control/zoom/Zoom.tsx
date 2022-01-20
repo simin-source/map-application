@@ -8,7 +8,7 @@ import { FloorState } from '@/components/control/floor/Floor';
 import {
     zoomContainer
 } from './Zoom.module.scss';
-import { FloorBoxState } from '@/components/floorBox/FloorBox';
+import { MapObject } from '@/map/Map';
 
 export const zoomState: {
     centmap?: { [key: string]: any };
@@ -54,10 +54,10 @@ export default defineComponent({
         zoomTo(to: number) {
             if (to > 0.346) {
                 FloorState.isShow = true;
-                FloorBoxState.isShow = true;
+                MapObject.isCarBtn = true;
             } else {
                 FloorState.isShow = false;
-                FloorBoxState.isShow = false;
+                MapObject.isCarBtn = false;
             }
             const { centmap } = zoomState;
             if (!centmap) return;

@@ -1,3 +1,4 @@
+import { planState } from '../planBox/PlanBox';
 import locationIMG from './location.png';
 import { getStartAndEnd, naviSimulate } from './mockData/Mock';
 
@@ -23,7 +24,7 @@ export class NavLine {
             this.routeManager.setNaviIcon(locationIMG, 12);
         });
 
-        _centmap.on('switchBuilding', ({ info }: {info: any}) => {
+        _centmap.on('switchBuilding', ({ info }: { info: any }) => {
             const { floorList, buildingID, rdFl } = info;
             if (floorList && typeof rdFl === 'number' && typeof buildingID === 'number') {
                 this._currentRdFls[`${buildingID}`] /* = this._currentRdFl */ = rdFl;
@@ -31,7 +32,7 @@ export class NavLine {
             }
         });
 
-        _centmap.on('switchFloor', ({ info }: {info: any}) => {
+        _centmap.on('switchFloor', ({ info }: { info: any }) => {
             const { floorList, buildingID, rdFl } = info;
             if (floorList && typeof rdFl === 'number' && typeof buildingID === 'number') {
                 this._currentRdFls[`${buildingID}`] /* = this._currentRdFl */ = rdFl;
@@ -65,6 +66,8 @@ export class NavLine {
             pathInfo = await routeManager.route(sLng, sLat, sRdFl, dLng, dLat, dRdFl, type);
         }
         console.log('画路线');
+        console.log(sLng, sLat, sRdFl, dLng, dLat, dRdFl, type);
+        console.log(pathInfo);
         this.routeReady = true;
         this.toggleLine();
         return pathInfo as { distance: number };
@@ -88,9 +91,12 @@ export class NavLine {
     }
 
     locate = (point?: [number, number, number]) => {
+        // 路线拆分点定位
         const { routeManager, routeReady } = this;
         if (!routeManager || !routeReady || !point) return;
         const info = routeManager.getCurrentPathInfo(...point);
+        console.log('当前路段信息');
+        console.log(info);
         const [curPathRemainDistance, remainDistance, curPathDistance, direction] = info[0];
         const cmapCoord = [point[0], point[1]] as [number, number];
         if (this._onLocate) {
@@ -108,6 +114,7 @@ export class NavLine {
     }
 
     runMock = () => {
+        // 开始播放导航
         const { routeManager, routeReady } = this;
         if (!routeManager || !routeReady) return;
         let points: Array<[number, number, number]>;
@@ -120,7 +127,7 @@ export class NavLine {
         let i = 0;
         const timer = setInterval(() => {
             this.locate(points[i]);
-            i ++;
+            i++;
             if (i >= points.length) clearInterval(timer);
         }, 10);
         this._closeMock = () => {

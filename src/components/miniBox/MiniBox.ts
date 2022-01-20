@@ -4,11 +4,9 @@ import { PointType } from '@/types';
 import { StoreState } from '../storeBox/StoreBox';
 import { compassState } from '../control/compass/Compass';
 import { FloorState } from '../control/floor/Floor';
-import { StereoscopicState } from '../control/stereoscopic/Stereoscopic';
 import { zoomState } from '../control/zoom/Zoom';
 import { FloorBoxState } from '../floorBox/FloorBox';
 import { SearchState } from '../search/search';
-import clothIconImg from './img/cloth.png';
 import testImg from '@/assets/img/uniqlo.png';
 
 import {
@@ -123,17 +121,8 @@ export class MiniBox {
     }
 
     show = (data: PointType, brandInfo: any) => {
-        this.setBrandInfo(brandInfo);
-        compassState.isShow = false;
-        FloorState.isShow = false;
-        zoomState.isShow = false;
-        StereoscopicState.isShow = false;
-        FloorBoxState.isShow = false;
-        SearchState.isShowInput = false;
-        MapObject.isCarBtn = false;
-        SearchState.isShowSearch = false;
         StoreState.isStoreBox = true;
-        MapObject.isBackIndex = true;
+        this.setBrandInfo(brandInfo);
         try {
             this._markData = {
                 ...data,
