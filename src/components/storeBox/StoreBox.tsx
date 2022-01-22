@@ -9,17 +9,16 @@ import { MapObject } from '@/map/Map';
 import { SearchState } from '../search/search';
 import { navigation } from '@/components/navInfo/NavInfo';
 import { PointType } from '@/types';
-import { compassState } from '../control/compass/Compass';
-import { FloorState } from '../control/floor/Floor';
-import { zoomState } from '../control/zoom/Zoom';
 
 export const StoreState: {
     isStoreBox: Boolean;
+    storeNav: Boolean;
     currentPoint: PointType;
     startPoint: PointType;
     endPoint: PointType;
 } = reactive({
     isStoreBox: false,
+    storeNav: false,
     currentPoint: {
         location: [0, 0],
         rdFl: 0,
@@ -65,16 +64,10 @@ export default defineComponent({
             </div>
             <div class={button_group}>
                 <div onClick={() => {
-                    compassState.isShow = false;
-                    zoomState.isShow = false;
-                    FloorState.isShow = false;
-                    MapObject.isCarBtn = false;
-                    StoreState.isStoreBox = false;
+                    MapObject.hideIndex?.();
                     SearchState.isShowSearch = false;
-                    MapObject.showRightSet = false;
-                    MapObject.currentInfoBox.hide();
+                    StoreState.storeNav = true;
                     planState.isPlan = true;
-                    planState.isRouteInfo = true;
                     this.confirm(true);
                 }}>
                     路线规划

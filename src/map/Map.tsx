@@ -11,8 +11,6 @@ import { MiniBox } from '@/components/miniBox/MiniBox';
 import Search, { SearchState } from '@/components/search/search';
 import StoreBox, { StoreState } from '@/components/storeBox/StoreBox';
 import RightSet, { RightBoxState } from '@/components/rightSet/RightSet';
-import { navigationEnd } from '@/components/navigationEnd/NavigationEnd';
-import arrowLeftUrl from '@/assets/img/arrow_left.png';
 import toCarImgUrl from '@/assets/img/toCar.png';
 import rightSetUrl from '@/assets/img/rightSet.png';
 import { mapManager } from './MapManager';
@@ -20,11 +18,11 @@ import { mapManager } from './MapManager';
 import CarBox, { CarState } from '@/components/carBox/CarBox';
 import { navigation, NavigationInfoBox } from '@/components/navInfo/NavInfo';
 import { PointMark } from '@/components/pointMark/PointMark';
-import PlanBox, { planState } from '@/components/planBox/PlanBox';
+import PlanBox from '@/components/planBox/PlanBox';
 import {
-  car_button, container, map_container, right_set
+    car_button, container, map_container, right_set
 } from './Map.module.scss';
-import { PointType } from '@/types';
+import { navigationEnd } from '@/components/navigationEnd/NavigationEnd';
 
 export const MapControlSpace: {
     T?: number;
@@ -34,19 +32,9 @@ export const MapControlSpace: {
     B: 0,
 });
 
-interface PoiInfoType {
-    bd_name: string;
-    fl_name: string | null;
-    number: string;
-    name: string;
-    center: [number, number, number];
-    seq_id: number;
-    fl_id: number;
-    index: number;
-    rd_fl: number;
-}
-
 export const MapObject: {
+    backIndex?: () => void;
+    hideIndex?: () => void;
     Cmap: any;
     currentInfoBox: any;
     startMarker: any;
@@ -100,13 +88,9 @@ export default defineComponent({
                 class={`flex-center ${car_button}`}
                 style={{ display: `${MapObject.isCarBtn ? 'flex' : 'none'}` }}
                 onClick={() => {
-                    // 控件都隐藏
-                    compassState.isShow = false;
-                    FloorState.isShow = false;
-                    zoomState.isShow = false;
-                    MapObject.isCarBtn = false;
+                    SearchState.isShowSort = false;
                     SearchState.isShowSearch = false;
-                    MapObject.showRightSet = false;
+                    MapObject.hideIndex?.();
                     CarState.isCarBrand = true;
                 }}
             >
@@ -172,5 +156,36 @@ export default defineComponent({
             });
         };
         import('@/assets/main.dart.js');
+        MapObject.backIndex = () => {
+            // 显示的组件
+            SearchState.isShowSort = false;
+            SearchState.isShowSearch = true;
+            MapObject.showRightSet = true;
+            MapObject.isCarBtn = true;
+            compassState.isShow = true;
+            zoomState.isShow = true;
+            if (SearchState.centmap) {
+                const zoom = SearchState.centmap.getZoom() as number;
+                if (zoom > 0.346) {
+                    FloorState.isShow = true;
+                }
+            }
+        };
+        MapObject.hideIndex = () => {
+            // 隐藏的组件
+            MapObject.showRightSet = false;
+            MapObject.isCarBtn = false;
+            compassState.isShow = false;
+            zoomState.isShow = false;
+            FloorState.isShow = false;
+            // 隐藏点的信息框
+            MapObject.currentInfoBox.hide();
+            StoreState.isStoreBox = false;
+        };
+        // @ts-ignore
+        // window.wx.miniProgram.getEnv((res: any) => {
+        //     console.log(res)
+        //     console.log(res.miniprogram)
+        // })
     },
 });

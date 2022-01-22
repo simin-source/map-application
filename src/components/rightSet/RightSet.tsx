@@ -14,10 +14,12 @@ export const RightBoxState: {
     isShow: boolean;
     _3D: boolean;
     ready: boolean;
+    StoreRouteType: string;
 } = reactive({
     isShow: false,
     _3D: true,
     ready: false,
+    StoreRouteType: '',
 });
 
 let _easeing = false;
@@ -27,6 +29,16 @@ export default defineComponent({
     data() {
         return {
             clickSwitchBtn: false,
+            planContent: [{
+                img: lastestUrl,
+                type: '距离最短',
+            }, {
+                img: straightUrl,
+                type: '直梯',
+            }, {
+                img: staircaseUrl,
+                type: '扶梯',
+            }],
         }
     },
     mounted() {
@@ -75,18 +87,12 @@ export default defineComponent({
                 <div class={route_type}>
                     <div>路线选择</div>
                     <div class={`flex-between ${route_content}`}>
-                        <div>
-                            <img src={lastestUrl} alt='图片找不到' />
-                            <div>距离最短</div>
-                        </div>
-                        <div>
-                            <img src={straightUrl} alt='图片找不到' />
-                            <div>直梯</div>
-                        </div>
-                        <div>
-                            <img src={staircaseUrl} alt='图片找不到' />
-                            <div>扶梯</div>
-                        </div>
+                        {this.planContent.map(item => {
+                            return <div onClick={() => { RightBoxState.StoreRouteType = item.type; }}>
+                                <img src={item.img} alt='图片找不到' />
+                                <div>{item.type}</div>
+                            </div>;
+                        })}
                     </div>
                 </div>
                 <div class={`flex-between ${voice}`}>

@@ -1,17 +1,10 @@
 import { MapObject } from "@/map/Map";
 import { defineComponent, reactive } from "vue";
-import { compassState } from "../control/compass/Compass";
-import { FloorState } from "../control/floor/Floor";
-import { zoomState } from "../control/zoom/Zoom";
-import { FloorBoxState } from "@/components/floorBox/FloorBox";
 import { SearchState } from "@/components/search/search";
 import powerImg from '@/assets/img/newpower.png';
 import transformUrl from '@/assets/img/transform.png';
-import timeUrl from '@/assets/img/time.png';
-import locationUrl from '@/assets/img/location.png';
 import del1 from '@/assets/img/del1.png';
 import del2 from '@/assets/img/del2.png';
-import { PointMark } from '@/components/pointMark/PointMark';
 
 import {
     car_box,
@@ -30,54 +23,36 @@ import {
     car_bottom,
     car_start,
     select_start,
-    route_overview,
-    route_btn,
-    navigate,
     power,
     provice,
-    car_tip
+    car_tip,
+    car_navtop
 } from "./CarBox.module.scss";
 import { PointType } from "@/types";
-import { Centmap } from "@/native/Centmap";
 import { navigation } from "../navInfo/NavInfo";
-
-interface PoiInfoType {
-    bd_name: string;
-    fl_name: string | null;
-    number: string;
-    name: string;
-    lnglat: [number, number];
-    center: [number, number, number];
-    seqId: number;
-    fl_id: number;
-    index: number;
-    rdFl: number;
-}
+import { StoreState } from "../storeBox/StoreBox";
+import { SelfInputState } from "../selfInput/SelfInput";
+import PlanBox, { planState } from "../planBox/PlanBox";
 
 export const CarState: {
     isCarBrand: boolean;
     isCarNum: boolean;
     isCarStart: boolean;
     confirmStart: boolean;
-    isNavgate: boolean;
-    isNavgateInfo: boolean;
+    carNav: boolean;
     parkingNum: string;
     carBrand: string;
-    parkingNumStore: PoiInfoType[];
+    parkingNumStore: PointType[];
 } = reactive({
     isCarBrand: false,
     isCarNum: false,
     isCarStart: false,
     confirmStart: false,
-    isNavgate: false,
-    isNavgateInfo: false,
+    carNav: false,
     parkingNum: '',
     carBrand: '',
     parkingNumStore: [],
 });
-
-let carPosiMarker: PointMark;
-carPosiMarker = new PointMark('toCar', 'end');
 
 function floatCompute(n1: number, n2: number) {
     const n1FlotLen = `${n1}`.split('.')[1] ? `${n1}`.split('.')[1].length : 0;
@@ -95,10 +70,10 @@ export function newDestination() {
     const navDestination = navigation.navDestination;
     if (navDestination) {
         let maxD = Number.MAX_VALUE;
-        let target: PoiInfoType | undefined;
+        let target: PointType | undefined;
         const desXY = navDestination.location;
-        parkingNumStore.forEach(i => {
-            const currXY = [i.center[0], i.center[1]] as [number, number];
+        parkingNumStore.forEach((i: PointType) => {
+            const currXY = [i.center?.[0], i.center?.[1]] as [number, number];
             // 计算目的地
             const d = computeDistance(desXY, currXY);
             if (d < maxD) {
@@ -107,14 +82,14 @@ export function newDestination() {
             }
         });
         if (target) {
-            const [x, y, height] = target.center;
+            const [x, y, height] = target.center ? target.center : target.location;
             navigation.newDestination({
                 location: [x, y],
                 height,
                 rdFl: target.rdFl,
                 resource: target,
             });
-            carPosiMarker.hide();
+            MapObject.endMarker.hide();
         }
     }
     return navDestination;
@@ -198,16 +173,14 @@ export default defineComponent({
             ],
             defaultCph: ['苏', '', '', '', '', '', ''],
             cph: [] as any[],
-            defaultCarNum: ['B', '1', '6', '6', '6'],
-            CarNumInfo: 'B1666',
+            defaultCarNum: ['A', '1', '2', '3', ''],
+            CarNumInfo: 'A123',
             CarStart: {
                 name: '我的位置',
             },
             show_keyboard: false,
             isShowBottom: true,
-            delState: false,
             isTranslate: false,
-            currentMarkData: {} as PointType,
         };
     },
     watch: {
@@ -222,28 +195,6 @@ export default defineComponent({
                 })
             },
             deep: true,
-        },
-        CarNumInfo(value) {
-            console.log('-----------');
-            console.log(value);
-
-            if (!this.delState) {
-                this.defaultCarNum = this.defaultCarNum?.map((item, index) => {
-                    if (index < value.split('').length) {
-                        return value.split('')[index];
-                    } else {
-                        return item;
-                    }
-                })
-            } else {
-                this.defaultCarNum = this.defaultCarNum?.map((item, index) => {
-                    if (index > value.length - 1) {
-                        return '';
-                    } else {
-                        return item;
-                    }
-                })
-            }
         },
     },
     created() {
@@ -270,7 +221,6 @@ export default defineComponent({
                 }
 
                 if (e.target.className.split(" ")[0] === "k-done") {
-                    // this.setPlateNumber(this.cph)
                     this.cphInputClick();
                     this.$emit("plate-number", this.cph);
                 }
@@ -286,81 +236,92 @@ export default defineComponent({
             if (parkingNum) {
                 // 车位号查询
                 CarState.parkingNum = `${this.defaultCarNum}`;
-                // CarState.isCarStart = true;
-                // CarState.isCarNum = false;
-                // CarState.isCarBrand = false;
-                const res = parkingNumStore.filter(i => i.number.toLowerCase().includes(parkingNum.toLowerCase()));
+                const res = parkingNumStore.filter(i => i.number?.toLowerCase().includes(parkingNum.toLowerCase()));
                 console.log('车位号寻车' + parkingNum);
                 if (res.length < 2) {
-                    this.showCurrentParking(res[0])
+                    // this.showCurrentParking(res[0])
+                    this.showCurrentParking()
                 }
             } else {
                 // 车牌查询
-                CarState.carBrand = `${this.defaultCarNum}`;
-                // CarState.isCarNum = false;
-                // CarState.isCarBrand = false;
-                // CarState.isCarStart = false;
-                // CarState.confirmStart = true;
+                CarState.carBrand = `${this.defaultCph}`;
                 const carBrand = this.cph.join('');
                 if (carBrand.length < 7) return;
                 const res = parkingNumStore.filter(item => item.bd_name === carBrand);
                 console.log('车牌寻车' + carBrand);
                 if (res.length < 2) {
-                    this.showCurrentParking(res[0])
+                    // this.showCurrentParking(res[0])
+                    this.showCurrentParking()
                 }
             }
         },
-        showCurrentParking(res: PoiInfoType) {
-            //相当于Cmap绑定的click
-            const { center, rdFl = 0, } = res;
-            const [lng, lat, height] = center;
-            const info: PointType = {
-                location: [lng, lat] as [number, number],
-                height: height ? height : 0.9,
-                rdFl,
-                resource: res,
-            };
-            this.currentMarkData = info;
+        showCurrentParking(res?: PointType) {
+            // const { center, rdFl = 0, } = res;
+            // const [lng, lat, height] = center;
+            // const info: PointType = {
+            //     location: [lng, lat] as [number, number],
+            //     height: height ? height : 0.9,
+            //     rdFl,
+            //     resource: res,
+            // };
+            // console.log('展示mark');
+            // carPosiMarker.show(info)
+            let tempMarkData = {
+                location: [22.16351318359375, 2.6662068367004395],
+                height: 0.9,
+                rdFl: 2,
+                fl_name: 'L1',
+                name: 'DIOR',
+            } as PointType;
             console.log('展示mark');
-            carPosiMarker.show(info)
+            // 设置终点
+            StoreState.endPoint = tempMarkData;
+            this.confirm(true);
             // 进入选择起点页
             CarState.isCarNum = false;
             CarState.isCarBrand = false;
             CarState.isCarStart = true;
+            planState.carNav = true;
         },
         confirm(mock: boolean) {
-            navigation.destination(this.currentMarkData, mock);
+            if (!navigation.isMock) {
+                MapObject.previewMarker.hide();
+                navigation.destination(StoreState.endPoint, true);
+                MapObject.endMarker.show(StoreState.endPoint);
+            }
         }
     },
     render() {
         return (
-            <div class={car_box} style={{ display: `${CarState.isCarNum || CarState.isCarBrand || CarState.isCarStart  || CarState.isNavgate ? 'block' : 'none'}` }}>
+            <div class={car_box} style={{ display: `${CarState.isCarNum || CarState.isCarBrand || CarState.isCarStart ? 'block' : 'none'}` }}>
                 <div class={car_num} style={{ display: `${CarState.isCarNum ? 'flex' : 'none'}` }}>
                     <div>输入车位号 : </div>
                     <input
                         type="text"
+                        v-model={this.CarNumInfo}
                         value={this.CarNumInfo}
-                        onKeydown={e => {
+                        onKeyup={e => {
+                            console.log(this.CarNumInfo);
                             if (e && e.keyCode === 8) {
-                                // 按 删除键
-                                this.delState = true;
-                                let temp = this.CarNumInfo.split('');
-                                temp.pop();
-                                this.CarNumInfo = temp.join('');
                                 console.log('删除');
-                                console.log(this.CarNumInfo);
+                                this.defaultCarNum = this.defaultCarNum?.map((item, index) => {
+                                    if (index > this.CarNumInfo.length - 1) {
+                                        return '';
+                                    } else {
+                                        return item;
+                                    }
+                                })
                             } else {
-                                this.delState = false;
-                            }
-                        }}
-                        onChange={(e: any) => {
-                            // console.log('==============');
-                            // console.log(e.target.value); //123
-                            // console.log(this.CarNumInfo); //1234
-                            if (!this.delState) {
-                                this.CarNumInfo = e.target?.value.slice(0, 5);
                                 console.log('添加');
-                                console.log(this.CarNumInfo);
+                                this.CarNumInfo = this.CarNumInfo.slice(0, 5);
+                                if (this.CarNumInfo.length < 5) {
+                                    let temp = new Array(5 - this.CarNumInfo.length);
+                                    let res = this.CarNumInfo.split('').concat(temp);
+                                    // @ts-ignore
+                                    this.defaultCarNum = res.fill('', this.CarNumInfo.length)
+                                } else {
+                                    this.defaultCarNum = this.CarNumInfo.split('');
+                                }
                             }
                         }}
                     />
@@ -393,7 +354,7 @@ export default defineComponent({
                         </div>
                     </div>
                     <div>
-                        <div class={car_btn} onClick={() => { this.searchCar(`${this.defaultCarNum}`) }}>一键寻车</div>
+                        <div class={car_btn} onClick={() => { this.searchCar(`${this.CarNumInfo.slice(0, 5)}`) }}>一键寻车</div>
                     </div>
                 </div>
                 <div class={car_brand} style={{ display: `${CarState.isCarBrand ? 'flex' : 'none'}` }}>
@@ -506,83 +467,34 @@ export default defineComponent({
                     </div>
                 </div>
                 <div class={car_start} style={{ display: `${CarState.isCarStart ? 'flex' : 'none'}` }}>
-                    <div class={car_tip}>请输入或点击地图选择起点</div>
-                    <div class={select_start}>
-                        <div style={{ flexDirection: `${this.isTranslate ? 'column-reverse' : 'column'}` }}>
-                            <div>
-                                <p style={{ background: '#5880d0' }}></p>
-                                <input type="text" placeholder="请选择起点" />
+                    <div class={car_navtop}>
+                        <div class={select_start}>
+                            <div style={{ flexDirection: `${this.isTranslate ? 'column-reverse' : 'column'}` }}>
+                                <div>
+                                    <p style={{ background: '#5880d0' }}></p>
+                                    <input type="text"
+                                        value={StoreState.startPoint?.name}
+                                        placeholder="请选择起点"
+                                        onClick={() => {
+                                            SearchState.isShowSort = true;
+                                            SearchState.isShowSearch = true;
+                                            SelfInputState.isShow = true;
+                                            SearchState.showCloseBtn = true;
+                                        }} />
+                                </div>
+                                <div style={{ width: '100%', height: '1px', backgroundColor: '#BBBBBB', padding: '0' }}></div>
+                                <div>
+                                    <p style={{ background: '#D05858' }}></p>
+                                    <input type="text" value={StoreState.endPoint?.name} readonly />
+                                </div>
                             </div>
-                            <div style={{ width: '100%', height: '1px', backgroundColor: '#BBBBBB', padding: '0' }}></div>
-                            <div>
-                                <p style={{ background: '#D05858' }}></p>
-                                <input type="text" value={this.CarNumInfo} readonly />
-                            </div>
-                        </div>
-                        <div style={{ marginLeft: '10px' }} onClick={() => { this.isTranslate = !this.isTranslate; }}>
-                            <img src={transformUrl} style={{ width: '20px' }} alt='图片找不到' />
-                        </div>
-                    </div>
-                    <div class={car_btn}>
-                        <div onClick={() => { this.confirm(true) }}>模拟导航</div>
-                        <div onClick={() => { this.confirm(false) }}>一键寻车</div>
-                    </div>
-                </div>
-                {/* <div class={route_overview} style={{ display: `${CarState.isOverview ? 'flex' : 'none'}` }}>
-                    <div>
-                        <div><img src={locationUrl} style={{ fontSize: '20px' }} alt='图片找不到' />距离210米</div>
-                        <div style={{ marginLeft: '63px' }}><img src={timeUrl} alt='图片找不到' />约2分12秒</div>
-                    </div>
-                    <div class={select_start}>
-                        <div style={{ flexDirection: `${this.isTranslate ? 'column-reverse' : 'column'}` }}>
-                            <div>
-                                <p style={{ background: '#5880d0' }}></p>
-                                <input type="text" value={this.CarStart.name} placeholder="请选择起点" />
-                            </div>
-                            <div style={{ width: '100%', height: '1px', backgroundColor: '#BBBBBB', padding: '0' }}></div>
-                            <div>
-                                <p style={{ background: '#D05858' }}></p>
-                                <input type="text" value={this.CarNumInfo} readonly />
+                            <div style={{ marginLeft: '10px' }} onClick={() => { this.isTranslate = !this.isTranslate; }}>
+                                <img src={transformUrl} style={{ width: '20px' }} alt='图片找不到' />
                             </div>
                         </div>
-                        <div style={{ marginLeft: '10px' }} onClick={() => { this.isTranslate = !this.isTranslate; }}>
-                            <img src={transformUrl} style={{ width: '20px' }} alt='图片找不到' />
-                        </div>
+                        <div class={car_tip}>请输入或点击地图选择起点</div>
                     </div>
-                    <div class={route_btn} style={{ marginTop: '10px' }}>
-                        <div>模拟导航</div>
-                        <div style={{ marginLeft: '45px' }} onClick={() => { CarState.isOverview = false; CarState.isNavgate = true; CarState.isNavgateInfo = true; }}>开始导航</div>
-                    </div>
-                </div> */}
-                <div class={navigate} style={{ display: `${CarState.isNavgate ? 'flex' : 'none'}` }}>
-                    <div class={'flex-center'}>
-                        <div>距离目的地210米</div>
-                    </div>
-                    <div class={route_btn}>
-                        <div
-                            onClick={() => {
-                                CarState.isNavgate = false;
-                                CarState.isNavgateInfo = false;
-                                SearchState.isShowSearch = true;
-                                // 控件显示，注意楼层控件需要在指定图层才能显示
-                                compassState.isShow = true;
-                                zoomState.isShow = true;
-                                MapObject.isCarBtn = true;
-                                if (SearchState.centmap) {
-                                    const zoom = SearchState.centmap.getZoom() as number;
-                                    if (zoom > 0.346) {
-                                        FloorState.isShow = true;
-                                        FloorBoxState.isShow = true;
-                                        FloorBoxState.isSearchRes = false;
-                                        FloorBoxState.FloorBoxTitle = 'F1 | 广州太古汇';
-                                    }
-                                }
-                            }}
-                        >
-                            退出
-                        </div>
-                        <div style={{ marginLeft: '45px' }} onClick={() => { CarState.isNavgate = false; CarState.isNavgateInfo = true; }}>全览</div>
-                    </div>
+                    <PlanBox />
                 </div>
             </div >
         );

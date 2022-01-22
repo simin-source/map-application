@@ -14,15 +14,18 @@ import FloorBox, { FloorBoxState } from '@/components/floorBox/FloorBox';
 import Icon from '@/components/icon/Icon';
 import { StoreState } from '../storeBox/StoreBox';
 import { PointType } from '@/types';
+import SelfInput, { SelfInputState } from '../selfInput/SelfInput';
 
 export const SearchState: {
     centmap?: { [key: string]: any };
     isShowSort: boolean;
     isShowSearch: boolean;
+    showCloseBtn: boolean;
 } = reactive({
     centmap: undefined,
     isShowSort: false,
     isShowSearch: true,
+    showCloseBtn: false,
 });
 
 export default defineComponent({
@@ -123,7 +126,6 @@ export default defineComponent({
                 "number": "",
                 "rdFl": null
             },
-            showCloseBtn: false,
             sortContent: false,
             floorContent: false,
             allFloorStatus: true,
@@ -194,7 +196,7 @@ export default defineComponent({
                     ]
                 }
             ],
-            currentFloor: '',
+            currentFloor: '', //当前选择的楼层
         }
     },
     mounted() {
@@ -205,8 +207,33 @@ export default defineComponent({
         });
     },
     methods: {
+        clearSearch() {
+            SearchState.showCloseBtn = false;
+            SearchState.isShowSort = false;
+            this.sortContent = false;
+            this.floorContent = false;
+            SelfInputState.isShow = false;
+            FloorBoxState.isShow = false;
+            this.searchValue = '';
+            this.currentFloor = '';
+            this.currentStoreType = -1;
+            this.currentFacilityType = -1;
+            this.floorType = -1;
+            this.floorContentType = -1;
+            this.allFloorStatus = true;
+        },
+        clearFloorType() {
+            this.currentFloor = '';
+            this.floorType = -1;
+            this.floorContentType = -1;
+            this.allFloorStatus = true;
+        },
         handleSearch(e: KeyboardEvent) {
+            // if(SelfInputState.isShow ){
+
+            // }
             if (e.keyCode && e.keyCode === 13) {
+                // @ts-ignore
                 console.log('搜索' + e.target?.value);
                 if (SearchState.centmap) {
                     mapManager.zoomTo(0.4);
@@ -247,8 +274,9 @@ export default defineComponent({
                 MapObject.currentInfoBox.show(tempMarkData, tempRes)
                 // MapObject.currentInfoBox.show(this.resMarkInfo, this.test);
 
-                this.showCloseBtn = false;
+                SearchState.showCloseBtn = false;
                 SearchState.isShowSort = false;
+                FloorBoxState.isShow = false;
                 compassState.isShow = true;
                 FloorState.isShow = true;
                 zoomState.isShow = true;
@@ -257,64 +285,34 @@ export default defineComponent({
         }
     },
     render() {
-        return <div id={container} style={{ height: `${SearchState.isShowSort ? '100%' : '60px'}` }}>
+        return <div id={container} style={{ height: `${SearchState.isShowSort ? '100%' : 'auto'}` }}>
             <div class={search_box} style={{ display: `${SearchState.isShowSearch ? 'block' : 'none'}`, background: `${SearchState.isShowSort ? '#fff' : 'transparent'}` }}>
-                <input
-                    type='text'
-                    placeholder='请输入搜索内容'
-                    value={this.searchValue}
+                <input type='text' placeholder='请输入搜索内容' value={this.searchValue}
                     onClick={() => {
-                        this.showCloseBtn = true;
                         SearchState.isShowSort = true;
-                        // 控件都隐藏
-                        compassState.isShow = false;
-                        FloorState.isShow = false;
-                        zoomState.isShow = false;
-                        MapObject.isCarBtn = false;
-                        MapObject.currentInfoBox.hide();
-                        StoreState.isStoreBox = false;
+                        SearchState.showCloseBtn = true;
+                        MapObject.hideIndex?.();
                     }}
                     onKeypress={e => this.handleSearch(e)}
                 />
                 <div class={icon}>
                     <Icon type="search" color="#7D7562" size={16} />
                 </div>
-                <div class={close_search} style={{ display: `${this.showCloseBtn ? 'block' : 'none'}` }} onClick={() => {
-                    this.showCloseBtn = false;
-                    SearchState.isShowSort = false;
-                    // 控件显示，注意楼层控件需要在指定图层才能显示
-                    compassState.isShow = true;
-                    zoomState.isShow = true;
-                    MapObject.isCarBtn = true;
-                    if (SearchState.centmap) {
-                        const zoom = SearchState.centmap.getZoom() as number;
-                        if (zoom > 0.346) {
-                            FloorState.isShow = true;
+                <div class={close_search}
+                    style={{ display: `${SearchState.showCloseBtn ? 'block' : 'none'}` }}
+                    onClick={() => {
+                        this.clearSearch();
+                        if (StoreState.storeNav) {
+                            SearchState.isShowSearch = false;
+                        } else {
+                            MapObject.backIndex?.();
                         }
-                    }
-                    // 初始化，清空
-                    this.searchValue = '';
-                    this.currentFloor = '';
-                    FloorBoxState.isShow = false;
-                }}>
+                    }}>
                     <Icon type="wrong" color="#7D7562" size={13} />
                 </div>
-                {/* <img class={icon} src={this.iconUrl} alt="图片找不到" onClick={() => {
-                    // 选择分类选择和搜索内容清空
-                    this.currentStoreType = -1;
-                    this.currentFacilityType = -1;
-                    this.searchValue = '';
-                    // 分类内容弹框隐藏
-                    SearchState.isShowSort = false;
-                    this.iconUrl = searchIconUrl;
-                    // 隐藏poi弹框,建筑弹框
-                    MapObject.currentInfoBox.hide();
-                    StoreState.isStoreBox = false;
-                }} /> */}
             </div>
-            <div class={search_type} style={{ display: `${SearchState.isShowSort ? 'flex' : 'none'}` }}>
-                <div
-                    class={`${this.floorContent ? type_active : ''}`}
+            <div class={search_type} style={{ display: `${SearchState.isShowSort && !SelfInputState.isShow ? 'flex' : 'none'}` }}>
+                <div class={`${this.floorContent ? type_active : ''}`}
                     onClick={() => {
                         this.sortContent = false;
                         this.floorContent = !this.floorContent;
@@ -323,17 +321,12 @@ export default defineComponent({
                 >
                     <div>{this.currentFloor ? this.currentFloor : '楼层'}</div>
                 </div>
-                <div
-                    class={`${this.sortContent ? type_active : ''}`}
+                <div class={`${this.sortContent ? type_active : ''}`}
                     onClick={() => {
                         this.floorContent = false;
                         this.sortContent = !this.sortContent;
                         FloorBoxState.isShow = false;
-                        // 楼层清空，初始化
-                        this.currentFloor = '';
-                        this.allFloorStatus = true;
-                        this.floorType = -1;
-                        this.floorContentType = -1;
+                        this.clearFloorType();
                     }}
                 >
                     <div>分类</div>
@@ -342,13 +335,7 @@ export default defineComponent({
             <div class={floor_content} style={{ display: `${SearchState.isShowSort && this.floorContent ? 'block' : 'none'}` }}>
                 <div
                     class={`${this.allFloorStatus ? floor_active : ''}`}
-                    onClick={() => {
-                        this.allFloorStatus = true;
-                        this.floorType = -1;
-                        this.floorContentType = -1;
-                        this.floorContent = false;
-                    }}>
-                    全部楼层
+                    onClick={() => { this.clearFloorType(); }}>全部楼层
                 </div>
                 {this.floorList.map((item, index) => {
                     return <div>
@@ -357,10 +344,10 @@ export default defineComponent({
                             onClick={() => {
                                 this.allFloorStatus = false;
                                 this.floorType = index;
-                                this.floorContentType = -1;
-                                FloorBoxState.isShow = true;
-                                this.floorContent = false;
                                 this.currentFloor = item.floor;
+                                this.floorContentType = -1;
+                                this.floorContent = false;
+                                FloorBoxState.isShow = true;
                             }}>
                             {item.floor}
                         </div>
@@ -378,7 +365,7 @@ export default defineComponent({
                     </div>;
                 })}
             </div>
-            <div class={hot_recommend} style={{ display: `${SearchState.isShowSort && !this.sortContent && !this.floorContent && !FloorBoxState.isShow ? 'flex' : 'none'}` }}>
+            <div class={hot_recommend} style={{ display: `${SearchState.isShowSort && !this.sortContent && !this.floorContent && !FloorBoxState.isShow && !SelfInputState.isShow ? 'flex' : 'none'}` }}>
                 <div class='flex-start'>
                     <div>热门推荐 :</div>
                     <div class={recommend_list}>
@@ -456,10 +443,8 @@ export default defineComponent({
                                                 onClick={() => {
                                                     this.currentFacilityType = -1;
                                                     this.currentStoreType = index;
-
                                                     this.sortContent = false;
                                                     FloorBoxState.isShow = true;
-
                                                     console.log('搜索' + item.storeType);
                                                     let resIndex = -1;
                                                     FloorBoxState.lookStoreType.forEach((i, index) => {
@@ -467,7 +452,6 @@ export default defineComponent({
                                                             resIndex = index;
                                                         }
                                                     })
-
                                                     FloorBoxState.currentTypeIndex = resIndex;
                                                 }}>
                                                 {item.storeType}
@@ -485,10 +469,9 @@ export default defineComponent({
                                                 onClick={() => {
                                                     this.currentFacilityType = -1;
                                                     this.currentStoreType = index;
-                                                    console.log('搜索' + item.storeType);
-
                                                     this.sortContent = false;
                                                     FloorBoxState.isShow = true;
+                                                    console.log('搜索' + item.storeType);
                                                 }}>
                                                 {item.storeType}
                                             </div>
@@ -510,10 +493,9 @@ export default defineComponent({
                                                 onClick={() => {
                                                     this.currentStoreType = -1;
                                                     this.currentFacilityType = index;
-                                                    console.log('搜索' + item.facilityType);
-
                                                     this.sortContent = false;
                                                     FloorBoxState.isShow = true;
+                                                    console.log('搜索' + item.facilityType);
                                                 }}>
                                                 {item.facilityType}
                                             </div>
@@ -530,10 +512,10 @@ export default defineComponent({
                                                 onClick={() => {
                                                     this.currentStoreType = -1;
                                                     this.currentFacilityType = index;
-                                                    console.log('搜索' + item.facilityType);
-
                                                     this.sortContent = false;
                                                     FloorBoxState.isShow = true;
+                                                    console.log('搜索' + item.facilityType);
+
                                                 }}>
                                                 {item.facilityType}
                                             </div>
@@ -546,6 +528,7 @@ export default defineComponent({
                 </div>
             </div>
             <FloorBox />
+            <SelfInput />
         </div >;
     },
 });

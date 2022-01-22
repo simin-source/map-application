@@ -95,9 +95,15 @@ export class NavLine {
         const { routeManager, routeReady } = this;
         if (!routeManager || !routeReady || !point) return;
         const info = routeManager.getCurrentPathInfo(...point);
-        console.log('当前路段信息');
-        console.log(info);
         const [curPathRemainDistance, remainDistance, curPathDistance, direction] = info[0];
+        // console.log('当前路段信息');
+        // console.log(info);
+        /*
+        curPathRemainDistance 当前方向路线的剩余距离
+        remainDistance  剩余距离
+        curPathDistance 路线距离（不会变）
+        direction 方向-3.1382782383385264
+        */
         const cmapCoord = [point[0], point[1]] as [number, number];
         if (this._onLocate) {
             this._onLocate({
@@ -123,6 +129,8 @@ export class NavLine {
         } else {
             points = routeManager.naviSimulate() as Array<[number, number, number]>;
         }
+        console.log("播放导航");
+        // console.log(points);
         if (points.length === 0) return;
         let i = 0;
         const timer = setInterval(() => {

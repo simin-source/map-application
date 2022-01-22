@@ -88,8 +88,6 @@ export class PointMark {
                 }
             });
         });
-
-        // this.show('currentBuilding');
     }
 
     private Marker: MarkerManager;

@@ -1,10 +1,9 @@
 import { defineComponent, reactive } from 'vue';
 
-import Icon from '@/components/icon/Icon';
 import { mapManager } from '@/map/MapManager';
 import { PointMark } from '../pointMark/PointMark';
 import {
-    body, info_box, destination, layer, store_info, store_title
+    info_box, destination, layer, store_info, store_title
 } from './NavigationEnd.module.scss';
 import { CarState } from '../carBox/CarBox';
 import navEndUrl from '@/assets/img/navEnd.png';
@@ -18,7 +17,7 @@ import { MapObject } from '@/map/Map';
 const NavigationState: {
     show: boolean;
     confirm?: () => void;
-    // close?: () => void;
+    close?: () => void;
     text: string;
 } = reactive({
     show: false,
@@ -53,17 +52,18 @@ const InfoBox = defineComponent({
     },
     methods: {
         confirm() {
-            const { confirm, /* close */ } = NavigationState;
+            const { confirm, close } = NavigationState;
             if (confirm) confirm();
-            // if (close) close();
-
-            SearchState.isShowSort = true;
+            if (close) close();
+            SearchState.isShowSearch = true;
+            SearchState.isShowSort = false;
             compassState.isShow = true;
             FloorState.isShow = true;
             zoomState.isShow = true;
             MapObject.isCarBtn = true;
             NavigationState.show = false;
-            CarState.isNavgateInfo = false;
+            CarState.carNav = false;
+            MapObject.showRightSet = true;
             MapObject.endMarker.hide();
             MapObject.startMarker.hide();
         },
@@ -105,10 +105,10 @@ class NavigationEnd {
         if (this.endPointMark) this.endPointMark.hide();
         return this;
     }
-    // onClose(fun?: () => void) {
-    //     if (fun) NavigationState.close = fun;
-    //     return this;
-    // }
+    onClose(fun?: () => void) {
+        if (fun) NavigationState.close = fun;
+        return this;
+    }
 }
 
 export const navigationEnd = new NavigationEnd();

@@ -14,7 +14,7 @@ class Voice {
     private textQueue: string[] = [];
     private playing = false;
 
-    play(text: string, wait = false) { //console.log(text, wait);
+    play(text: string, wait = false) {
         if (wait && this.playing) this.textQueue.push(text);
         else this.voice(text);
     }

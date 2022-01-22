@@ -326,116 +326,6 @@
     }
 }
 
-.route_overview,
-.navigate {
-    background-color: #f9f8f2;
-    width: 100%;
-    min-height: 130px;
-    height: auto;
-    position: fixed;
-    bottom: 0;
-    z-index: 10;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    .select_start {
-        width: 100%;
-        height: auto;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        > div:first-child {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-
-            > div {
-                padding: 9px;
-                display: flex;
-                justify-content: flex-start;
-                align-items: center;
-
-                p {
-                    width: 9px;
-                    height: 9px;
-                    border-radius: 50%;
-                    margin-right: 15px;
-                }
-
-                input {
-                    height: 16px;
-                    font-size: 14px;
-                    color: #7d7562;
-                }
-
-                ::-webkit-input-placeholder {
-                    /* WebKit, Blink, Edge */
-                    font-size: 14px;
-                    color: #7d7562;
-                }
-                :-moz-placeholder {
-                    /* Mozilla Firefox 4 to 18 */
-                    font-size: 14px;
-                    color: #7d7562;
-                }
-                ::-moz-placeholder {
-                    /* Mozilla Firefox 19+ */
-                    font-size: 14px;
-                    color: #7d7562;
-                }
-                :-ms-input-placeholder {
-                    /* Internet Explorer 10-11 */
-                    font-size: 14px;
-                    color: #7d7562;
-                }
-            }
-        }
-    }
-
-    .car_btn {
-        width: 200px;
-        height: 34px;
-        background: #7d7562;
-        border-radius: 17px;
-        color: #fff;
-        line-height: 34px;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .route_btn {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 22px;
-
-        > div {
-            width: 120px;
-            height: 34px;
-            border: 1px solid #7d7562;
-            border-radius: 10px;
-            font-size: 16px;
-            line-height: 34px;
-            text-align: center;
-        }
-
-        > div:first-child {
-            color: #7d7562;
-        }
-
-        > div:last-child {
-            color: #fefefe;
-            background: #7d7562;
-        }
-    }
-}
-
 .car_start {
     background-color: #f9f8f2;
     width: 100%;
@@ -447,84 +337,78 @@
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
 
-    .car_tip {
-        position: absolute;
-        left: 50%;
-        right: 50%;
-        bottom: 100px;
-        transform: translateX(-50%);
-        width: 270px;
-        text-align: center;
-        padding: 5px 50px;
-        background: rgba(249, 248, 242, 0.8);
-        box-shadow: 0px 1px 4px 0px rgba(125, 117, 98, 0.4);
-        border-radius: 10px;
-    }
-
-    .select_start {
+    .car_navtop {
         position: fixed;
         top: 36px;
         left: 50%;
         right: 50%;
         transform: translateX(-50%);
-        box-shadow: 0px 1px 4px 0px rgba(125, 117, 98, 0.4);
-        border-radius: 10px;
         z-index: 10;
         width: 270px;
-        height: 90px;
+        height: auto;
         background: rgba(255, 249, 249, 0.7);
         box-shadow: 0px 1px 4px 0px rgba(125, 117, 98, 0.4);
         border-radius: 10px;
-        padding: 0 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        padding: 10px 20px;
 
-        > div:first-child {
+        .car_tip {
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #a39b95;
+        }
+
+        .select_start {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            width: 210px;
 
-            > div {
-                padding: 10px 0px;
+            > div:first-child {
                 display: flex;
-                justify-content: flex-start;
+                flex-direction: column;
+                justify-content: center;
                 align-items: center;
+                width: 210px;
 
-                p {
-                    width: 9px;
-                    height: 9px;
-                    border-radius: 50%;
-                    margin-right: 15px;
-                }
+                > div {
+                    padding: 10px 0px;
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
 
-                input {
-                    height: 20px;
-                    font-size: 14px;
-                    color: #7d7562;
-                }
+                    p {
+                        width: 9px;
+                        height: 9px;
+                        border-radius: 50%;
+                        margin-right: 15px;
+                    }
 
-                ::-webkit-input-placeholder {
-                    /* WebKit, Blink, Edge */
-                    font-size: 14px;
-                    color: #7d7562;
-                }
-                :-moz-placeholder {
-                    /* Mozilla Firefox 4 to 18 */
-                    font-size: 14px;
-                    color: #7d7562;
-                }
-                ::-moz-placeholder {
-                    /* Mozilla Firefox 19+ */
-                    font-size: 14px;
-                    color: #7d7562;
-                }
-                :-ms-input-placeholder {
-                    /* Internet Explorer 10-11 */
-                    font-size: 14px;
-                    color: #7d7562;
+                    input {
+                        height: 20px;
+                        font-size: 14px;
+                        color: #7d7562;
+                    }
+
+                    ::-webkit-input-placeholder {
+                        /* WebKit, Blink, Edge */
+                        font-size: 14px;
+                        color: #7d7562;
+                    }
+                    :-moz-placeholder {
+                        /* Mozilla Firefox 4 to 18 */
+                        font-size: 14px;
+                        color: #7d7562;
+                    }
+                    ::-moz-placeholder {
+                        /* Mozilla Firefox 19+ */
+                        font-size: 14px;
+                        color: #7d7562;
+                    }
+                    :-ms-input-placeholder {
+                        /* Internet Explorer 10-11 */
+                        font-size: 14px;
+                        color: #7d7562;
+                    }
                 }
             }
         }
@@ -555,44 +439,6 @@
             }
         }
     }
-}
-
-.route_overview > div:first-child {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 16px;
-    color: #7d7562;
-    padding-top: 23px;
-    padding-bottom: 10px;
-
-    > div {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-
-        img {
-            width: 17px;
-            margin-right: 10px;
-        }
-    }
-}
-
-.navigate > div:first-child {
-    width: 100%;
-    font-size: 16px;
-    color: #7d7562;
-    padding: 30px;
-}
-
-.noselect {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
 }
 
 @media screen and(max-width: 350px) {
