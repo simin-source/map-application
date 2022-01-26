@@ -26,3 +26,16 @@ export const mapID = ID ? ID : '203116P'; //太古汇
 // tslint:disable-next-line
 // export const dataURL = ['dev', 'test'].includes(import.meta.env.MODE) ? 'https://tst-data.centmap.com:8443/mapres/' : 'https://data.centmap.com/mapres/';
 export const dataURL = ['dev', 'test'].includes(import.meta.env.MODE) ? 'https://tst-data.centmap.com:8443/mapres/' : 'https://tst-data.centmap.com:8443/mapres/';
+
+export const SERVERURL = (() => {
+    // tslint:disable-next-line
+    const mode = import.meta.env.MODE;
+    switch (mode) {
+        case 'dev':
+            return 'https://chenkai-data.centmap.com:12077';
+        case 'test':
+            return 'https://tst-data.centmap.com:8443';
+        default:
+            return 'https://data.centmap.com';
+    }
+})();

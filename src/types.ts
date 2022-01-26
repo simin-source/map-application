@@ -10,6 +10,20 @@ export interface PointType {
     name?: string;
     number?:string; //车位号
 }
+
+export interface SearchResType {
+    bd_name: string;
+    cat_id: number;
+    center: [number, number, number];
+    fl_id: number;
+    fl_name: string;
+    index: number;
+    name: string;
+    number: string;
+    rd_fl: number;
+    seq_id: number;
+}
+
 export interface NavInfoItemType {
     description: string;
     distance: number;

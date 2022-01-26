@@ -7,7 +7,7 @@ import { mapManager } from '@/map/MapManager';
 import {
     active, down, floorContainer, scroll_box, up
 } from './Floor.module.scss';
-import { FloorBoxState } from '@/components/floorBox/FloorBox';
+import { MapObject } from '@/map/Map';
 
 export const FloorState: {
     centmap?: { [key: string]: any };
@@ -62,12 +62,25 @@ export default defineComponent({
                 const { floorList, currentFloor, buildingID } = info;
                 if (typeof buildingID === 'number') this.currentBuildingID = buildingID;
                 if (floorList as [] && typeof currentFloor === 'number') {
-                    // this.floorInfo = floorList;
-                    // this.isActive = floorList[currentFloor];
-                    // this.scrollTo(currentFloor, 0);
-                    this.floorInfo = ['W', 'WU', 'F1', 'F2', 'F3', 'F4'];
-                    this.isActive = this.floorInfo[1];
-                    this.scrollTo(1, 0);
+                    this.floorInfo = floorList;
+                    this.isActive = floorList[currentFloor];
+                    this.scrollTo(currentFloor, 0);
+                    // this.floorInfo = ['W', 'WU', 'F1', 'F2', 'F3', 'F4'];
+                    // this.isActive = this.floorInfo[1];
+                    // this.scrollTo(1, 0);
+                } else {
+                    this.floorInfo = [];
+                }
+            });
+            centmap.on('switchFloor', ({ info }: { info: any }) => {
+                const { floorList, currentFloor, buildingID } = info;
+                // console.log(info);
+                MapObject.currentRdfl = currentFloor;
+                if (typeof buildingID === 'number') this.currentBuildingID = buildingID;
+                if (floorList as [] && typeof currentFloor === 'number') {
+                    this.floorInfo = floorList;
+                    this.isActive = floorList[currentFloor];
+                    this.scrollTo(currentFloor, 0);
                 } else {
                     this.floorInfo = [];
                 }
@@ -79,7 +92,6 @@ export default defineComponent({
             const { centmap } = FloorState;
             if (centmap) {
                 this.isActive = this.floorInfo[index];
-                FloorBoxState.FloorBoxTitle = `${this.isActive} | 广州太古汇`
                 // 切换楼层
                 Loading.show();
                 centmap.switchFloor(this.currentBuildingID, index, () => {

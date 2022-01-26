@@ -1,5 +1,5 @@
 .plan_box {
-    background-color: #fffdf4;
+    background: #ffffff;
     width: 100%;
     height: auto;
     position: fixed;
@@ -22,7 +22,7 @@
         > div {
             width: 90px;
             height: 71px;
-            border: 1px solid #7d7562;
+            border: 1px solid #b8b0a9;
             border-radius: 10px;
             display: flex;
             flex-direction: column;
@@ -31,7 +31,7 @@
 
             > div {
                 font-size: 14px;
-                color: #7d7562;
+                color: #999999;
 
                 &:nth-child(2) {
                     font-size: 16px;
@@ -43,12 +43,13 @@
             }
         }
         .active {
-            border: 1px solid #bf5d28;
-            box-shadow: 0px 0px 6px 0px rgba(191, 93, 40, 0.6);
+            border: 1px solid #0074ed;
+            box-shadow: 0px 0px 6px 0px rgba(0, 116, 237, 0.6);
 
+            > div:nth-child(1),
             > div:nth-child(2) {
                 font-weight: bold;
-                color: #bf5d28;
+                color: #0074ed;
             }
         }
     }
@@ -60,19 +61,20 @@
 
         > div {
             font-size: 12px;
-            color: #7d7562;
+            color: #0074ed;
         }
 
         > div:last-child {
             width: 120px;
             height: 34px;
             background: #7d7562;
-            border: 1px solid #7d7562;
-            border-radius: 10px;
-            font-size: 16px;
-            color: #fefefe;
+            background: linear-gradient(-90deg, #1981f1, #58d5fb);
+            color: #fff;
             line-height: 34px;
             text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 17px;
         }
     }
 }

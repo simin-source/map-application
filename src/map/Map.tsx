@@ -1,7 +1,7 @@
 import { defineComponent, reactive } from 'vue';
 
 import { dataURL, mapID } from '@/App';
-import ConfirmStart from '@/components/confirmStart/ConfirmStart';
+import ConfirmStart from '@/components/confirmPoint/ConfirmPoint';
 import Control from '@/components/control/Index';
 import Compass, { compassState } from '@/components/control/compass/Compass';
 import Floor, { FloorState } from '@/components/control/floor/Floor';
@@ -16,13 +16,14 @@ import rightSetUrl from '@/assets/img/rightSet.png';
 import { mapManager } from './MapManager';
 
 import CarBox, { CarState } from '@/components/carBox/CarBox';
-import { navigation, NavigationInfoBox } from '@/components/navInfo/NavInfo';
+import { navigation, NavigationInfoBox, navInfoState } from '@/components/navInfo/NavInfo';
 import { PointMark } from '@/components/pointMark/PointMark';
 import PlanBox from '@/components/planBox/PlanBox';
 import {
     car_button, container, map_container, right_set
 } from './Map.module.scss';
 import { navigationEnd } from '@/components/navigationEnd/NavigationEnd';
+import SortBox, { SortBoxState } from '@/components/sortBox/SortBox';
 
 export const MapControlSpace: {
     T?: number;
@@ -42,6 +43,7 @@ export const MapObject: {
     previewMarker: any;
     isCarBtn: boolean;
     showRightSet: boolean;
+    currentRdfl: number;
 } = reactive({
     Cmap: {},
     currentInfoBox: {},
@@ -50,13 +52,14 @@ export const MapObject: {
     previewMarker: {},
     isCarBtn: false,
     showRightSet: true,
+    currentRdfl: 2, //默认是L1层,值为2
 });
 
 export default defineComponent({
     name: 'Map',
     render() {
         const { T, B } = MapControlSpace;
-        return <div id={container}>
+        return <div id={container} style={{ background: '#ddd' }}>
             <div id={map_container} />
             <Control.BOX>
                 <Control.LT space={T}>
@@ -77,6 +80,7 @@ export default defineComponent({
             <PlanBox />
             <navigationEnd.infoBox />
             <RightSet />
+            <SortBox />
             <div
                 class={right_set}
                 style={{ display: `${MapObject.showRightSet ? 'flex' : 'none'}` }}
@@ -91,6 +95,9 @@ export default defineComponent({
                     SearchState.isShowSort = false;
                     SearchState.isShowSearch = false;
                     MapObject.hideIndex?.();
+                    if (MapObject.Cmap?.markerManager.has('preview')) {
+                        MapObject.Cmap?.markerManager.hide('preview');
+                    }
                     CarState.isCarBrand = true;
                 }}
             >
@@ -106,7 +113,7 @@ export default defineComponent({
                 mapSource: `${dataURL}${mapID}`,
                 defaultControl: false,
                 mockNavigation: false,
-                angle: -180,
+                angle: 90,
                 zoom: 0.25,
             });
             mapManager.init(Cmap);
@@ -115,6 +122,17 @@ export default defineComponent({
 
             Cmap.on('complete', (res: { info: string }) => {
                 Loading.hide();
+            });
+
+            Cmap.on('zoom', (res: { info: string }) => {
+                const zoom = MapObject.Cmap.getZoom() as number;
+                if (zoom > 0.346) {
+                    FloorState.isShow = true;
+                    MapObject.isCarBtn = true;
+                } else {
+                    FloorState.isShow = false;
+                    MapObject.isCarBtn = false;
+                }
             });
 
             // 添加地图节点对象
@@ -135,15 +153,28 @@ export default defineComponent({
                     fl_name,
                     name,
                 };
+                navInfoState.rdfl = rdFl;
                 StoreState.currentPoint = markData;
                 MapObject.previewMarker.show(markData);
-                MapObject.currentInfoBox.show(markData, info);
-                if (navigation.isMock) {
-                    // 确认起点
-                    CarState.confirmStart = true;
-                    StoreState.startPoint = markData;
-                } else {
+                StoreState.isStoreBox = true;
+                MapObject.currentInfoBox.show(markData);
+                if (SortBoxState.pointList.length > 0) {
+                    SortBoxState.pointList?.map((item, index) => {
+                        if (MapObject.Cmap?.markerManager.has(`id${index}`)) {
+                            MapObject.Cmap?.markerManager.remove(`id${index}`);
+                        }
+                    });
+                }
+                if (!navigation.isMock) {
                     StoreState.endPoint = markData;
+                    // 测试数据
+                    // StoreState.endPoint = {
+                    //     location: [12.657302856445312, 34.99754333496094],
+                    //     height: 0.9,
+                    //     rdFl: 1,
+                    //     fl_name: "L2",
+                    //     name: 'prada',
+                    // };
                 }
 
                 // 判断是否有高亮
@@ -164,11 +195,9 @@ export default defineComponent({
             MapObject.isCarBtn = true;
             compassState.isShow = true;
             zoomState.isShow = true;
-            if (SearchState.centmap) {
-                const zoom = SearchState.centmap.getZoom() as number;
-                if (zoom > 0.346) {
-                    FloorState.isShow = true;
-                }
+            const zoom = MapObject.Cmap.getZoom() as number;
+            if (zoom > 0.346) {
+                FloorState.isShow = true;
             }
         };
         MapObject.hideIndex = () => {

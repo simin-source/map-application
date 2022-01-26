@@ -7,23 +7,23 @@
         position: fixed;
         bottom: 40px;
         left: 15px;
-        width: 35px;
-        height: 35px;
-        border-radius: 10px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
         background-color: rgba(255, 255, 255, 0.7);
         box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.2);
         z-index: 10;
         align-items: center;
 
         img {
-            width: 21px;
-            height: 21px;
+            width: 18px;
+            height: 18px;
         }
     }
 
     .right_set{
         position: fixed;
-        top: 75px;
+        top: 65px;
         right: 15px;
         width: 35px;
         height: 35px;

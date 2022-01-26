@@ -11,11 +11,17 @@
         right: 0;
         width: 50%;
         height: 100%;
-        background: #f9f8f2;
+        background: #f4f4f4;
         box-shadow: 1px 1px 6px 0px rgba(132, 115, 90, 0.48), 0px 0px 98px 0px rgba(232, 232, 232, 0.14),
             0px 3px 7px 0px rgba(255, 255, 255, 0.35);
         border-radius: 10px 0px 0px 10px;
-        padding-top: 13px;
+
+        .title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #5d5d5d;
+            padding: 15px 10px;
+        }
 
         .map_type {
             width: 100%;
@@ -33,10 +39,13 @@
                 margin-top: 12px;
 
                 > div {
+                    position: relative;
+
                     img {
                         width: 79px;
                         height: 49px;
-                        border: 1px solid #7d7562;
+                        // border: 1px solid #7d7562;
+                        border-radius: 5px;
                     }
 
                     > div {
@@ -46,12 +55,25 @@
                         font-size: 10px;
                         color: #7d7562;
                     }
+
+                    .selected {
+                        position: absolute;
+                        right: 0;
+                        bottom: 27px;
+                        color: #ffffff;
+                        width: 23px;
+                        height: 20px;
+                        line-height: 25px;
+                        text-align: right;
+                        padding-right: 2px;
+                        background: linear-gradient(138deg, transparent 15px, #0074ed 0) bottom right;
+                        border-bottom-right-radius: 5px;
+                    }
                 }
             }
         }
 
         .route_type {
-            margin-top: 20px;
             width: 100%;
             height: auto;
             background: #ffffff;
@@ -67,12 +89,23 @@
                 margin-top: 20px;
 
                 > div {
-                    img {
-                        width: 43px;
-                        margin: 0 auto;
+                    > div:first-child {
+                        width: 48px;
+                        height: 48px;
+                        border: 1px solid #ebebeb;
+                        border-radius: 50%;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+
+                        img {
+                            width: 25px;
+                            height: 25px;
+                            margin: 0 auto;
+                        }
                     }
 
-                    > div {
+                    > div:last-child {
                         font-size: 10px;
                         color: #7d7562;
                         width: 100%;
@@ -86,22 +119,26 @@
         .voice {
             margin-top: 13px;
             padding: 10px;
+            color: #5d5d5d;
+            font-size: 11px;
+            font-weight: bold;
 
             .voice_btn {
                 width: 38px;
                 height: 17px;
                 border-radius: 8px;
-                border: 1px solid #7d7562;
+                // border: 1px solid #7d7562;
                 position: relative;
+                background: #ffffff;
 
                 .switch_btn {
                     width: 12px;
                     height: 12px;
                     border-radius: 50%;
-                    background: #7d7562;
+                    background: #0074ed;
                     position: absolute;
                     left: 2px;
-                    top: 1px;
+                    top: 2px;
                     transition: left 0.5s;
                 }
             }

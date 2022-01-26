@@ -1,3 +1,4 @@
+import { navInfoState } from '../navInfo/NavInfo';
 import { planState } from '../planBox/PlanBox';
 import locationIMG from './location.png';
 import { getStartAndEnd, naviSimulate } from './mockData/Mock';
@@ -132,11 +133,10 @@ export class NavLine {
         console.log("播放导航");
         // console.log(points);
         if (points.length === 0) return;
-        let i = 0;
         const timer = setInterval(() => {
-            this.locate(points[i]);
-            i++;
-            if (i >= points.length) clearInterval(timer);
+            this.locate(points[navInfoState.currentPointIndex]);
+            navInfoState.currentPointIndex++;
+            if (navInfoState.currentPointIndex >= points.length || navInfoState.isParseMock) clearInterval(timer);
         }, 10);
         this._closeMock = () => {
             this.clear();
@@ -149,6 +149,12 @@ export class NavLine {
         if (!routeManager) return;
         const adsorbP = routeManager.attach(...point);
         return point[0] === adsorbP[0] && point[1] === adsorbP[1] ? undefined : [...adsorbP] as [number, number, number, number];
+    }
+
+    parseMock = (isParse: boolean) => {
+        console.log(isParse);
+        // const { _closeMock } = this;
+        // if (_closeMock) _closeMock();
     }
 
     closeMock = () => {

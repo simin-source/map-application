@@ -1,13 +1,13 @@
 import { defineComponent, reactive } from 'vue';
 import {
-    right_box, map_type, type_content, route_type, route_content, voice, voice_btn, switch_btn,
+    right_box, map_type, type_content, route_type, route_content, voice, voice_btn, switch_btn, selected, title
 } from './RightSet.module.scss';
 
 import twoUrl from '@/assets/img/twoD.png';
 import threeUrl from '@/assets/img/threeD.png';
-import lastestUrl from '@/assets/img/lastest.png';
-import straightUrl from '@/assets/img/straight.png';
-import staircaseUrl from '@/assets/img/staircase.png';
+import lastestUrl from '@/assets/img/lastest2.png';
+import straightUrl from '@/assets/img/straight2.png';
+import staircaseUrl from '@/assets/img/staircase2.png';
 import { mapManager } from '@/map/MapManager';
 
 export const RightBoxState: {
@@ -19,7 +19,7 @@ export const RightBoxState: {
     isShow: false,
     _3D: true,
     ready: false,
-    StoreRouteType: '',
+    StoreRouteType: '距离最短',
 });
 
 let _easeing = false;
@@ -33,11 +33,11 @@ export default defineComponent({
                 img: lastestUrl,
                 type: '距离最短',
             }, {
-                img: straightUrl,
-                type: '直梯',
-            }, {
                 img: staircaseUrl,
                 type: '扶梯',
+            }, {
+                img: straightUrl,
+                type: '直梯',
             }],
         }
     },
@@ -71,26 +71,30 @@ export default defineComponent({
         return <div class={right_box} style={{ display: `${RightBoxState.isShow ? 'block' : 'none'}` }}
             onClick={() => { RightBoxState.isShow = false; }}>
             <div onClick={e => { e.stopPropagation(); RightBoxState.isShow = true; }}>
+                <div class={title}>地图类型</div>
                 <div class={map_type}>
-                    <div>地图类型</div>
                     <div class={`flex-between ${type_content}`}>
                         <div onClick={() => { this.setPitch(); RightBoxState._3D = false; }}>
-                            <img src={twoUrl} alt='图片找不到' />
-                            <div>2D平面图</div>
+                            <img src={twoUrl} alt='图片找不到' style={{ border: `${RightBoxState._3D ? '0' : '1px solid #0074ED'}` }} />
+                            <div style={{ color: `${RightBoxState._3D ? '#5D5D5D' : '#0074ED'}` }}>2D平面图</div>
+                            <div class={selected} style={{ display: `${RightBoxState._3D ? 'none' : 'block'}` }}>√</div>
                         </div>
                         <div onClick={() => { this.setPitch(); RightBoxState._3D = true; }}>
-                            <img src={threeUrl} alt='图片找不到' />
-                            <div>3D平面图</div>
+                            <img src={threeUrl} alt='图片找不到' style={{ border: `${RightBoxState._3D ? '1px solid #0074ED' : '0'}` }} />
+                            <div style={{ color: `${RightBoxState._3D ? '#0074ED' : '#5D5D5D'}` }}>3D平面图</div>
+                            <div class={selected} style={{ display: `${RightBoxState._3D ? 'block' : 'none'}` }}>√</div>
                         </div>
                     </div>
                 </div>
+                <div class={title}>路线选择</div>
                 <div class={route_type}>
-                    <div>路线选择</div>
                     <div class={`flex-between ${route_content}`}>
                         {this.planContent.map(item => {
                             return <div onClick={() => { RightBoxState.StoreRouteType = item.type; }}>
-                                <img src={item.img} alt='图片找不到' />
-                                <div>{item.type}</div>
+                                <div style={{ background: `${RightBoxState.StoreRouteType === item.type ? '#0074ED' : '#fff'}` }}>
+                                    <img src={item.img} alt='图片找不到' />
+                                </div>
+                                <div style={{ color: `${RightBoxState.StoreRouteType === item.type ? '#0074ED' : '#5D5D5D'}` }}>{item.type}</div>
                             </div>;
                         })}
                     </div>

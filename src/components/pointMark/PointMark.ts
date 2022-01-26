@@ -7,7 +7,7 @@ import startIconImg from './img/start.png';
 class MarkerManager {
     manager: any;
 
-    constructor(id: string, type: 'end' | 'start' | 'preview', size = 32) {
+    constructor(id: string, type: 'end' | 'start' | 'preview', size = 18) {
         // 创建mark位置元素
         const Icon = this._iconBox = document.createElement('div');
         const IconImg = this._iconImg = document.createElement('img');
@@ -66,11 +66,11 @@ class MarkerManager {
 }
 
 export class PointMark {
-    constructor(private id: string, type: 'end' | 'start' | 'preview' = 'end', size = 32) {
+    constructor(private id: string, type: 'end' | 'start' | 'preview' = 'end', size = 18) {
         this.Marker = new MarkerManager(id, type, size);
 
         mapManager.onReady(Cmap => {
-            Cmap.on('switchBuilding', ({ info }: {info: any}) => {
+            Cmap.on('switchBuilding', ({ info }: { info: any }) => {
                 const { floorList, buildingID, currentFloor } = info;
                 if (typeof buildingID === 'number') this._currentBuildingId = buildingID;
                 if (floorList && typeof currentFloor === 'number') {
@@ -79,7 +79,7 @@ export class PointMark {
                 }
             });
 
-            Cmap.on('switchFloor', ({ info }: {info: any}) => {
+            Cmap.on('switchFloor', ({ info }: { info: any }) => {
                 const { floorList, buildingID, currentFloor } = info;
                 if (typeof buildingID === 'number') this._currentBuildingId = buildingID;
                 if (floorList && typeof currentFloor === 'number') {

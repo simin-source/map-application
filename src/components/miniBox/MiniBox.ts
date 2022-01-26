@@ -5,7 +5,7 @@ import { StoreState } from '../storeBox/StoreBox';
 import { compassState } from '../control/compass/Compass';
 import { FloorState } from '../control/floor/Floor';
 import { zoomState } from '../control/zoom/Zoom';
-import { FloorBoxState } from '../floorBox/FloorBox';
+import { SortBoxState } from '../sortBox/SortBox';
 import { SearchState } from '../search/search';
 import testImg from '@/assets/img/uniqlo.png';
 
@@ -75,8 +75,8 @@ class MarkerManager {
         this._onClick = fun;
     }
 
-    setBrandInfo = (brandInfo: { [key: string]: any }) => {
-        const { name } = brandInfo;
+    setData = (data: { [key: string]: any }) => {
+        const { name } = data;
         this._brandName.innerHTML = name;
     }
 }
@@ -116,13 +116,13 @@ export class MiniBox {
     set onClick(fun: () => void) {
         this.Marker.onclick = fun;
     }
-    setBrandInfo = (info: any) => {
-        this.Marker.setBrandInfo(info);
+    setData = (data: any) => {
+        this.Marker.setData(data);
     }
 
-    show = (data: PointType, brandInfo: any) => {
+    show = (data: PointType) => {
         StoreState.isStoreBox = true;
-        this.setBrandInfo(brandInfo);
+        this.setData(data);
         try {
             this._markData = {
                 ...data,

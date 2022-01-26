@@ -4,154 +4,22 @@
     z-index: 10;
 }
 
-.car_brand {
-    background-color: #f9f8f2;
+.layer {
+    position: absolute;
+    z-index: 99;
     width: 100%;
-    min-height: 130px;
-    height: auto;
-    position: fixed;
-    bottom: 0;
-    z-index: 10;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    > div:first-child {
-        width: 100%;
-        height: 30px;
-        line-height: 30px;
-        font-size: 16px;
-        font-weight: bold;
-        color: #7d7562;
-        padding: 5px 15px;
-    }
-
-    .car_input {
-        width: 100%;
-        height: 70px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        padding: 0px 15px;
-
-        .cph_wrap {
-            width: auto;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            background: #fff;
-            font-size: 16px;
-            line-height: 38px;
-            min-height: 38px;
-            overflow: hidden;
-            padding: 0 5px;
-
-            span {
-                text-align: center;
-                position: relative;
-                flex: 1;
-                height: 38px;
-                left: 0;
-                background-color: #fff;
-                color: #7d7562;
-                font-size: 16px;
-            }
-
-            .power {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                padding-top: 3px;
-
-                img {
-                    width: 16px;
-                    margin: 0 auto;
-                    margin-bottom: 2px;
-                }
-
-                span {
-                    display: inline-block;
-                    height: 11px;
-                    font-size: 10px;
-                    line-height: 10px;
-                }
-            }
-
-            span:last-child::before {
-                content: none;
-            }
-        }
-
-        .cph_wrap_shadow {
-            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
-            border-radius: 10px;
-            z-index: 0;
-
-            span::before {
-                content: "";
-                display: block;
-                height: 20px;
-                width: 1px;
-                background: #cecece;
-                position: absolute;
-                top: 0;
-                margin-top: 9px;
-                right: 0;
-                box-shadow: 0 0 5px rgba(92, 169, 214, 0.43);
-            }
-        }
-    }
-
-    .car_bottom {
-        border-top: 1px solid #e8e8e8;
-        padding-top: 8px;
-
-        .to_num {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0px 15px;
-
-            > div:first-child {
-                width: calc(100% - 70px);
-                font-size: 10px;
-                text-align: center;
-            }
-
-            .num_btn {
-                width: 70px;
-                height: 22px;
-                font-size: 10px;
-                color: #fefefe;
-                background: #7d7562;
-                box-shadow: 0px 0px 6px 0px rgba(125, 117, 98, 0.4);
-                border-radius: 10px;
-                text-align: center;
-                line-height: 22px;
-            }
-        }
-
-        .car_btn {
-            width: 200px;
-            height: 34px;
-            background: #7d7562;
-            border-radius: 17px;
-            color: #fff;
-            line-height: 34px;
-            text-align: center;
-            margin: 18px auto;
-        }
-    }
+    height: 100%;
+    top: 0;
+    left: 0;
 
     .keyboard_wrap {
-        background: #f9f8f2;
-        padding: 10px 2px 0;
         width: 100%;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ffffff;
+        padding: 10px 2px 0;
     }
 
     .keyboard {
@@ -242,16 +110,166 @@
     }
 }
 
-.car_num {
-    background-color: #f9f8f2;
+.car_brand {
+    background-color: #fff;
     width: 100%;
     min-height: 130px;
     height: auto;
     position: fixed;
-    bottom: 0;
+    top: 0;
     z-index: 10;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    > div:first-child {
+        width: 100%;
+        height: 30px;
+        line-height: 30px;
+        font-size: 16px;
+        font-weight: bold;
+        color: #333333;
+        padding: 5px 15px;
+    }
+
+    .car_input {
+        width: 100%;
+        height: 70px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        padding: 0px 15px;
+
+        .cph_wrap {
+            width: auto;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            background: #fff;
+            font-size: 16px;
+            line-height: 38px;
+            min-height: 38px;
+            overflow: hidden;
+            padding: 0 5px;
+
+            span {
+                text-align: center;
+                position: relative;
+                flex: 1;
+                height: 38px;
+                left: 0;
+                background-color: #fff;
+                color: #333333;
+                font-size: 16px;
+            }
+
+            .power {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding-top: 3px;
+
+                img {
+                    width: 16px;
+                    margin: 0 auto;
+                    margin-bottom: 2px;
+                }
+
+                span {
+                    display: inline-block;
+                    height: 11px;
+                    font-size: 10px;
+                    line-height: 10px;
+                }
+            }
+
+            span:last-child::before {
+                content: none;
+            }
+        }
+
+        .cph_wrap_shadow {
+            box-shadow: 0px 0px 6px 0px rgba(153, 153, 153, 0.4);
+            border-radius: 10px;
+            z-index: 0;
+
+            span::before {
+                content: "";
+                display: block;
+                height: 20px;
+                width: 1px;
+                background: #cecece;
+                position: absolute;
+                top: 0;
+                margin-top: 9px;
+                right: 0;
+                box-shadow: 0px 0px 6px 0px rgba(153, 153, 153, 0.4);
+            }
+        }
+    }
+
+    .to_num {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0px 15px;
+
+        > div:first-child {
+            width: calc(100% - 70px);
+            font-size: 10px;
+            text-align: center;
+        }
+
+        .num_btn {
+            width: 70px;
+            height: 22px;
+            font-size: 10px;
+            color: #fff;
+            background: linear-gradient(91deg, #30adff, #3c8dff, #3c8dff);
+            border-radius: 11px;
+            text-align: center;
+            line-height: 22px;
+        }
+    }
+}
+
+.car_bottom {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-top: 1px solid #e8e8e8;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+
+    .car_btn {
+        width: 200px;
+        height: 34px;
+        background: linear-gradient(91deg, #30adff, #3c8dff, #3c8dff);
+        border-radius: 17px;
+        color: #fff;
+        line-height: 34px;
+        text-align: center;
+        margin: 18px auto;
+    }
+}
+
+.car_num {
+    background-color: #fff;
+    width: 100%;
+    min-height: 130px;
+    height: auto;
+    position: fixed;
+    top: 0;
+    z-index: 10;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -270,7 +288,7 @@
     }
 
     > div:first-child {
-        color: #7d7562;
+        color: #333333;
         width: 100%;
         height: 30px;
         line-height: 30px;
@@ -292,7 +310,7 @@
             display: flex;
             justify-content: flex-start;
             align-items: center;
-            color: #7d7562;
+            color: #333333;
 
             .cph_wrap {
                 width: 35px;
@@ -338,18 +356,17 @@
     border-top-right-radius: 20px;
 
     .car_navtop {
+        width: 100%;
+        height: 100px;
+        background: #fff;
         position: fixed;
-        top: 36px;
-        left: 50%;
-        right: 50%;
-        transform: translateX(-50%);
-        z-index: 10;
-        width: 270px;
-        height: auto;
-        background: rgba(255, 249, 249, 0.7);
+        top: 0;
         box-shadow: 0px 1px 4px 0px rgba(125, 117, 98, 0.4);
-        border-radius: 10px;
-        padding: 10px 20px;
+        z-index: 10;
+        padding: 10px 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
 
         .car_tip {
             width: 100%;
@@ -359,31 +376,51 @@
         }
 
         .select_start {
+            width: 100%;
+            min-height: 90px;
+            height: auto;
+            background: #f6f6f6;
+            border-radius: 10px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            padding: 0 12px;
 
-            > div:first-child {
+            .locate_icon {
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                width: 210px;
+                margin-right: 15px;
+
+                p {
+                    width: 18px;
+                    height: 18px;
+                    background: #78c458;
+                    border-radius: 50%;
+                    color: #fff;
+                    font-size: 10px;
+                    text-align: center;
+                    line-height: 18px;
+                    margin: 2px;
+                }
+            }
+
+            > .detail_locate {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                width: calc(100% - 60px);
 
                 > div {
+                    width: 100%;
                     padding: 10px 0px;
                     display: flex;
                     justify-content: flex-start;
                     align-items: center;
 
-                    p {
-                        width: 9px;
-                        height: 9px;
-                        border-radius: 50%;
-                        margin-right: 15px;
-                    }
-
                     input {
+                        width: auto;
                         height: 20px;
                         font-size: 14px;
                         color: #7d7562;
@@ -408,6 +445,18 @@
                         /* Internet Explorer 10-11 */
                         font-size: 14px;
                         color: #7d7562;
+                    }
+
+                    > div {
+                        width: 31px;
+                        height: 15px;
+                        border: 1px solid #a9a9a9;
+                        border-radius: 3px;
+                        font-size: 11px;
+                        font-weight: bold;
+                        color: #a9a9a9;
+                        line-height: 13px;
+                        text-align: center;
                     }
                 }
             }

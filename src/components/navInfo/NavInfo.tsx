@@ -2,18 +2,21 @@ import { defineComponent, reactive, watch } from "vue";
 import { CarState } from '@/components/carBox/CarBox';
 import { planState } from '../planBox/PlanBox';
 import {
-    navInfo_box, nav_img, nav_meter, car_nav, store_nav, select_start, layer,
-    car_remain, cur_floor, exit, remain_meter
+    navInfo_box, nav_img, nav_meter, car_nav, store_nav, select_start, layer, locate_icon, detail_locate,
+    car_remain, cur_floor, exit, remain_meter, over_line, progress, parse, select_btn, across_box
 } from './NavInfo.module.scss';
 
 import transformUrl from '@/assets/img/transform.png';
+import parseUrl from '@/assets/img/parse.png';
+import acrossFloor from '@/assets/img/across_floor.png';
+import routingUrl from '@/assets/img/routing.png';
 import { PointType } from "@/types";
 import { mapManager } from "@/map/MapManager";
 import { NavLine } from "@/components/navLine/NavLine";
 import { nativeGPS } from "@/components/nativeGPS/NativeGPS";
 import { nativeNavigation } from "@/components/nativeNavigation/NativeNavigation";
 import { voiceManager } from "@/components/voice/Voice";
-import { navigationEnd } from "@/components/navigationEnd/NavigationEnd";
+import { navigationEnd, NavigationState } from "@/components/navigationEnd/NavigationEnd";
 import { StoreState } from "@/components/storeBox/StoreBox";
 import { MapObject } from "@/map/Map";
 import { Centmap } from "@/native/Centmap";
@@ -23,7 +26,8 @@ import { zoomState } from "../control/zoom/Zoom";
 import { FloorState } from "../control/floor/Floor";
 import { SearchState } from "../search/search";
 import { RightBoxState } from "../rightSet/RightSet";
-import { SelfInputState } from "../selfInput/SelfInput";
+import SelfInput, { SelfInputState } from "../selfInput/SelfInput";
+import { ConfirmState } from "../confirmPoint/ConfirmPoint";
 
 export const navInfoState: {
     onNav?: () => void;
@@ -40,9 +44,15 @@ export const navInfoState: {
     curPathRemainDistance?: number;
     curPathDistance?: number;
     curPathWheelInfo?: string[];
+    currentLine?: any;
+    rdfl?: number;
+    isParseMock: boolean;
+    currentPointIndex: number;
 } = reactive({
     isMock: false,
     pathDistance: 0,
+    isParseMock: false,
+    currentPointIndex: 0,
 });
 
 let naviEnd = false;
@@ -76,7 +86,7 @@ export const NavigationInfoBox = defineComponent({
     name: 'NavInfo',
     data() {
         return {
-            isTranslate: false,
+            isAcrossFloor: false,
         }
     },
     mounted() {
@@ -86,13 +96,26 @@ export const NavigationInfoBox = defineComponent({
                 this.voiceMoment(pathRemainDistance);
             }
         });
+        watch(() => navInfoState.rdfl, rdfl => {
+            // 监听楼层变化
+            if (rdfl !== StoreState.currentPoint.rdFl && typeof rdfl === 'number') {
+                MapObject.Cmap?.switchFloor(1, rdfl);
+                navInfoState.isParseMock = true;
+                this.isAcrossFloor = true;
+                setTimeout(() => {
+                    this.isAcrossFloor = false;
+                    navInfoState.isParseMock = false;
+                    navInfoState.currentLine.runMock();
+                }, 5000);
+            }
+        });
     },
     methods: {
         close(bearing?: number) {
             if (navInfoState.onClose) navInfoState.onClose(bearing);
         },
         voiceMoment(remain_distance: number) {
-            const { curPathDistance, curPathWheelInfo } = navInfoState;
+            const { curPathDistance, curPathWheelInfo, rdfl } = navInfoState;
             if (remain_distance <= (navInfoState.isMock ? 2 : 5)) {
                 console.log('导航结束');
                 if (naviEnd) return;
@@ -203,76 +226,106 @@ export const NavigationInfoBox = defineComponent({
     },
     render() {
         const { pathRemainDistance, curPathRemainDistance, curPathInfo } = navInfoState;
-        return <div class={navInfo_box} style={{ display: `${CarState.carNav || StoreState.storeNav ? 'flex' : 'none'}` }}>
+        return <div class={navInfo_box} style={{ display: `${CarState.carNav || StoreState.storeNav || this.isAcrossFloor ? 'flex' : 'none'}` }}>
             <div class={store_nav} style={{ display: `${StoreState.storeNav ? 'flex' : 'none'}` }}>
                 <div class={select_start}>
-                    <div style={{ flexDirection: `${this.isTranslate ? 'column-reverse' : 'column'}` }}>
+                    <div class={locate_icon}>
+                        <p style={{ background: '#78C458' }}>起</p>
+                        <div style={{ width: '3px', height: '3px', background: '#D5D5D5', borderRadius: '50%', margin: '2px' }}></div>
+                        <div style={{ width: '3px', height: '3px', background: '#D5D5D5', borderRadius: '50%', margin: '2px' }}></div>
+                        <div style={{ width: '3px', height: '3px', background: '#D5D5D5', borderRadius: '50%', margin: '2px' }}></div>
+                        <p style={{ background: '#F17171' }}>终</p>
+                    </div>
+                    <div class={detail_locate}>
                         <div>
-                            <p style={{ background: '#5880d0' }}></p>
                             <input
                                 type="text"
                                 value={StoreState.startPoint?.name}
                                 placeholder="我的位置"
                                 onClick={() => {
-                                    SearchState.isShowSort = true;
-                                    SearchState.isShowSearch = true;
-                                    SelfInputState.isShow = true;
-                                    SearchState.showCloseBtn = true;
+                                    SelfInputState.isShow = !SelfInputState.isShow;
                                 }}
                             />
+                            {StoreState.startPoint?.fl_name ? <div>{StoreState.startPoint?.fl_name}</div> :
+                                <div class={select_btn}
+                                    style={{ background: 'linear-gradient(91deg, #95E476, #83D063, #7AC75A)' }}
+                                    onClick={() => { ConfirmState.confirmEnd = false; ConfirmState.confirmStart = true; }}
+                                >
+                                    设为起点
+                                </div>
+                            }
                         </div>
-                        <div style={{ width: '100%', height: '1px', backgroundColor: '#BBBBBB', padding: '0' }}></div>
                         <div>
-                            <p style={{ background: '#D05858' }}></p>
-                            <input type="text" value={StoreState.endPoint?.name} readonly />
+                            <input type="text" value={StoreState.endPoint?.name} placeholder="我的位置" />
+                            {StoreState.endPoint?.fl_name ? <div>{StoreState.endPoint?.fl_name}</div> :
+                                <div class={select_btn}
+                                    style={{ background: 'linear-gradient(91deg, #30adff, #3c8dff, #3c8dff)' }}
+                                    onClick={() => { ConfirmState.confirmStart = false; ConfirmState.confirmEnd = true; }}
+                                >
+                                    设为终点
+                                </div>
+                            }
                         </div>
                     </div>
-                    <div style={{ marginLeft: '10px' }} onClick={() => { this.isTranslate = !this.isTranslate; }}>
+                    <div style={{ marginLeft: '10px' }} onClick={() => {
+                        let temp = StoreState.endPoint;
+                        StoreState.endPoint = StoreState.startPoint;
+                        StoreState.startPoint = temp;
+                    }}>
                         <img src={transformUrl} style={{ width: '20px' }} alt='图片找不到' />
                     </div>
                 </div>
-                <div>请输入或点击地图选择起点</div>
+                {/* <div>请输入或点击地图选择起点</div> */}
             </div>
             <div class={layer} style={{ display: `${CarState.carNav ? 'flex' : 'none'}` }}>
                 <div class={car_nav}>
                     <div class={nav_img}>
-                        <Icon type={curPathInfo ? curPathInfo.icon : 'Turn-right'} color="#7D7562" size={62} />
+                        <Icon type={curPathInfo ? curPathInfo.icon : 'Turn-right'} color="#fff" size={62} />
                     </div>
                     <div class={nav_meter}>
                         <div>{curPathInfo?.description}</div>
                         <div>{curPathRemainDistance}米</div>
                     </div>
                 </div>
+                <div class={over_line}>
+                    <p style={{ background: '#78C458' }}>L1</p>
+                    {/* img/icon */}
+                    <div>⇧L3</div>
+                    <div>🏃‍♂️</div>
+                    <p style={{ background: '#F17171' }}>终</p>
+                    <div class={progress}></div>
+                </div>
                 <div class={car_remain}>
-                    <div class={cur_floor}>当前楼层: L3</div>
+                    {/* <div class={cur_floor}>当前楼层: L3</div> */}
                     <div>
                         <div class={exit} onClick={() => {
                             if (navInfoState.onClose) navInfoState.onClose();
-                            CarState.carNav = false;
-                            // 控件显示，注意楼层控件需要在指定图层才能显示
-                            MapObject.showRightSet = true;
-                            SearchState.isShowSearch = true;
-                            compassState.isShow = true;
-                            zoomState.isShow = true;
-                            MapObject.isCarBtn = true;
-                            if (SearchState.centmap) {
-                                const zoom = SearchState.centmap.getZoom() as number;
-                                if (zoom > 0.346) {
-                                    FloorState.isShow = true;
-                                }
-                            }
+                            NavigationState.isEnd = true;
                             // 隐藏清空
                             clearNavInfoState();
                         }}>
                             退出
                         </div>
                         <div class={remain_meter}>
-                            <div>目的地: 停车场</div>
+                            <div>当前导航终点 <span style={{ color: '#D1B096' }}>{StoreState.endPoint?.name}</span></div>
                             <div>剩余{pathRemainDistance}米</div>
+                        </div>
+                        <div class={parse} onClick={() => {
+                            navInfoState.isParseMock = !navInfoState.isParseMock;
+                            if (!navInfoState.isParseMock) navInfoState.currentLine.runMock();
+                        }}>
+                            <img src={`${navInfoState.isParseMock ? parseUrl : routingUrl}`} alt="图片找不到" />
                         </div>
                     </div>
                 </div>
             </div>
+            <div class={layer} style={{ display: `${this.isAcrossFloor ? 'flex' : 'none'}`, background: 'rgba(5, 5, 5, 0.8)' }}>
+                <div class={across_box}>
+                    <img src={acrossFloor} alt="图片找不到" />
+                    <div>跨楼层进行中</div>
+                </div>
+            </div>
+            <SelfInput />
         </div >;
     },
 });
@@ -289,7 +342,7 @@ export class Navigation {
     constructor() {
         mapManager.onReady(centmap => {
             this._centmap = centmap;
-            const line = this._navLine = new NavLine(centmap);
+            const line = navInfoState.currentLine = this._navLine = new NavLine(centmap);
 
             line.onLocate = info => {
                 const { curPathRemainDistance, remainDistance, curPathDistance, curPathWheelInfo, cmapCoord, direction, endPoint, rdFl } = info;
@@ -297,6 +350,7 @@ export class Navigation {
                     location: cmapCoord,
                     rdFl,
                 };
+                navInfoState.rdfl = rdFl;
                 navInfoState.curPathRemainDistance = +curPathRemainDistance.toFixed(0);
                 navInfoState.pathRemainDistance = +remainDistance.toFixed(0);
                 navInfoState.curPathDistance = curPathDistance;
@@ -551,6 +605,7 @@ export class Navigation {
         CarState.isCarStart = false;
         planState.carNav = false;
         CarState.carNav = true; //显示实时导航弹框
+        navInfoState.currentPointIndex = 0;
         _navLine.runMock();
         navInfoState.onClose = (bearing?: number) => {
             this.clear();

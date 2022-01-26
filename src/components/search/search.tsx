@@ -1,28 +1,28 @@
-import { defineComponent, reactive } from 'vue';
+import { defineComponent, reactive, watch } from 'vue';
 
 import {
     container, sort_list, sort_content, search_box, sort_title, active, search_type, type_active, floor_content,
-    hot_recommend, recommend_list, icon, sort_item, history_title, close_search, floor_active
+    hot_recommend, recommend_list, icon, sort_item, history_title, close_search, floor_active, default_content,
+    floor_box, store_list, store_type, show_store, store_info, store_title, work_state, floor_res
 } from './Search.module.scss';
 
 import { MapObject } from '@/map/Map';
-import { compassState } from '@/components/control/compass/Compass';
-import { FloorState } from '@/components/control/floor/Floor';
-import { zoomState } from '@/components/control/zoom/Zoom';
 import { mapManager } from '@/map/MapManager';
-import FloorBox, { FloorBoxState } from '@/components/floorBox/FloorBox';
 import Icon from '@/components/icon/Icon';
 import { StoreState } from '../storeBox/StoreBox';
-import { PointType } from '@/types';
-import SelfInput, { SelfInputState } from '../selfInput/SelfInput';
+import { searchStore } from '@/services';
+import imgUrl from '@/assets/img/uniqlo.png';
+import baseImg from '@/assets/img/base_point.png';
+import locatURL from '@/assets/img/locate_icon.png';
+import { SortBoxState } from '../sortBox/SortBox';
+import { PointMark } from '../pointMark/PointMark';
+import { navInfoState } from '../navInfo/NavInfo';
 
 export const SearchState: {
-    centmap?: { [key: string]: any };
     isShowSort: boolean;
     isShowSearch: boolean;
     showCloseBtn: boolean;
 } = reactive({
-    centmap: undefined,
     isShowSort: false,
     isShowSearch: true,
     showCloseBtn: false,
@@ -48,19 +48,31 @@ export default defineComponent({
                     storeType: '男装'
                 }, {
                     typeId: 4,
-                    storeType: '彩妆护肤'
+                    storeType: '美容护理'
                 }, {
                     typeId: 5,
                     storeType: '珠宝首饰'
                 }, {
                     typeId: 6,
-                    storeType: '休闲娱乐'
+                    storeType: '生活时尚'
                 }, {
                     typeId: 7,
-                    storeType: '体育户外'
+                    storeType: '休闲运动'
                 }, {
                     typeId: 8,
                     storeType: '母婴儿童'
+                }, {
+                    typeId: 9,
+                    storeType: '服务'
+                }, {
+                    typeId: 10,
+                    storeType: '超市'
+                }, {
+                    typeId: 11,
+                    storeType: '家居'
+                }, {
+                    typeId: 12,
+                    storeType: '电器'
                 }
             ],
             facilitySort: [
@@ -87,7 +99,7 @@ export default defineComponent({
                     facilityType: '出入口'
                 }, {
                     typeId: 8,
-                    facilityType: '洗手间'
+                    facilityType: '母婴室'
                 }
             ],
             hotRecommendList: [
@@ -126,8 +138,6 @@ export default defineComponent({
                 "number": "",
                 "rdFl": null
             },
-            sortContent: false,
-            floorContent: false,
             allFloorStatus: true,
             floorList: [
                 {
@@ -197,25 +207,123 @@ export default defineComponent({
                 }
             ],
             currentFloor: '', //当前选择的楼层
+            searchType: [
+                {
+                    type: 1,
+                    icon: '',
+                    name: '楼层',
+                }, {
+                    type: 2,
+                    icon: '',
+                    name: '分类',
+                }, {
+                    type: 3,
+                    icon: '',
+                    name: '默认排序',
+                }
+            ],
+            currentSearchType: 0, //默认展示当前楼层
+            defaultType: [
+                {
+                    type: 1,
+                    name: '默认排序'
+                }, {
+                    type: 2,
+                    name: '点赞最多'
+                }, {
+                    type: 3,
+                    name: '优惠优先'
+                }, {
+                    type: 4,
+                    name: '团购优先'
+                }, {
+                    type: 5,
+                    name: '活动优先'
+                }, {
+                    type: 6,
+                    name: '名称A-Z'
+                }
+            ],
+            currentDefaultType: 0,
+            storeList: [
+                {
+                    sort: '全部',
+                    img: imgUrl,
+                    title: '优衣库',
+                    type: '休闲服饰',
+                    time: '10:00-22:00',
+                    state: 1 //营业中
+                }, {
+                    sort: '全部',
+                    img: imgUrl,
+                    title: '优衣库',
+                    type: '休闲服饰',
+                    time: '10:00-22:00',
+                    state: 2 //维护中
+                }, {
+                    sort: '全部',
+                    img: imgUrl,
+                    title: '优衣库',
+                    type: '休闲服饰',
+                    time: '10:00-22:00',
+                    state: 1 //营业中
+                }, {
+                    sort: '全部',
+                    img: imgUrl,
+                    title: '优衣库',
+                    type: '休闲服饰',
+                    time: '10:00-22:00',
+                    state: 3 //休息中
+                }, {
+                    sort: '全部',
+                    img: imgUrl,
+                    title: '优衣库',
+                    type: '休闲服饰',
+                    time: '10:00-22:00',
+                    state: 1 //营业中
+                },
+            ],
+            showfloorRes: false,
+            lookStoreType: [
+                {
+                    type: 1,
+                    name: '全部',
+                    number: 100,
+                }, {
+                    type: 2,
+                    name: '男装',
+                    number: 38,
+                }, {
+                    type: 3,
+                    name: '女装',
+                    number: 6,
+                }, {
+                    type: 4,
+                    name: '设施',
+                    number: 7,
+                }, {
+                    type: 5,
+                    name: '珠宝/钟表/饰品',
+                    number: 7,
+                }
+            ],
+            currentLookIndex: -1,
         }
     },
     mounted() {
-        this.currentStoreType = -1;
-        this.currentFacilityType = -1;
-        mapManager.onReady(centmap => {
-            SearchState.centmap = centmap;
+        watch(() => MapObject.currentRdfl, rdfl => {
+            // 监听楼层变化
+            this.currentFloorRes();
         });
     },
     methods: {
         clearSearch() {
             SearchState.showCloseBtn = false;
             SearchState.isShowSort = false;
-            this.sortContent = false;
-            this.floorContent = false;
-            SelfInputState.isShow = false;
-            FloorBoxState.isShow = false;
+            this.showfloorRes = false;
             this.searchValue = '';
             this.currentFloor = '';
+            this.currentSearchType = 0;
             this.currentStoreType = -1;
             this.currentFacilityType = -1;
             this.floorType = -1;
@@ -228,61 +336,67 @@ export default defineComponent({
             this.floorContentType = -1;
             this.allFloorStatus = true;
         },
-        handleSearch(e: KeyboardEvent) {
-            // if(SelfInputState.isShow ){
-
-            // }
-            if (e.keyCode && e.keyCode === 13) {
-                // @ts-ignore
-                console.log('搜索' + e.target?.value);
-                if (SearchState.centmap) {
-                    mapManager.zoomTo(0.4);
-                    mapManager.pitchTo(0);
-                }
-                const tempRes = {
-                    fl_name: "L1",
-                    lnglat: [
-                        16.858224868774414,
-                        0.000091552734375,
-                        0
-                    ],
-                    seqId: 1,
-                    index: 1,
-                    park: false,
-                    cat_id: 105002013,
-                    bd_name: "太古汇",
-                    center: [
-                        22.16351318359375,
-                        2.6662068367004395,
-                        0.800000011920929
-                    ],
-                    fl_num: 1,
-                    name: "DIOR",
-                    number: "",
-                    rdFl: 2
+        handleSearch(name: string) {
+            mapManager.zoomTo(0.4);
+            mapManager.pitchTo(0);
+            searchStore({ name }).then(res => {
+                if (res) SortBoxState.pointList = res;
+                this.currentFloorRes();
+                this.clearSearch();
+                MapObject.backIndex?.();
+                SortBoxState.isShow = true;
+            })
+        },
+        currentFloorRes() {
+            if (SortBoxState.pointList.length === 1) {
+                const { center, rd_fl, fl_name, name } = SortBoxState.pointList[0];
+                const [lng, lat, height] = center;
+                MapObject.Cmap?.switchFloor(1, rd_fl);
+                // 添加marker
+                const markData = {
+                    location: [lng, lat] as [number, number],
+                    height: height ? height : 0.9,
+                    rdFl: rd_fl,
+                    fl_name,
+                    name,
                 };
-                let tempMarkData = {
-                    location: [22.16351318359375, 2.6662068367004395],
-                    height: 0.9,
-                    rdFl: 2,
-                    fl_name: 'L1',
-                    name: 'DIOR',
-                } as PointType;
-                StoreState.currentPoint = tempMarkData;
-                StoreState.endPoint = tempMarkData;
-                MapObject.previewMarker.show(tempMarkData);
-                MapObject.currentInfoBox.show(tempMarkData, tempRes)
-                // MapObject.currentInfoBox.show(this.resMarkInfo, this.test);
-
-                SearchState.showCloseBtn = false;
-                SearchState.isShowSort = false;
-                FloorBoxState.isShow = false;
-                compassState.isShow = true;
-                FloorState.isShow = true;
-                zoomState.isShow = true;
-                MapObject.isCarBtn = true;
+                StoreState.currentPoint = markData;
+                StoreState.endPoint = markData;
+                MapObject.previewMarker.show(markData);
+                MapObject.currentInfoBox.show(markData);
+            } else {
+                SortBoxState.pointList.forEach((item, index) => {
+                    if (MapObject.currentRdfl === item.rd_fl) {
+                        const [lng, lat, height] = item.center;
+                        // 添加marker
+                        const dom = document.createElement('img');
+                        dom.src = baseImg;
+                        dom.style.width = '18px';
+                        MapObject.Cmap?.markerManager.addMarker(`id${index}`, {
+                            marker: dom,
+                            lnglat: [lng, lat],
+                        })
+                    }
+                    MapObject.Cmap?.markerManager.show();
+                    if (MapObject.Cmap?.markerManager.has('preview') && MapObject.Cmap?.markerManager.has('currentBrand')) {
+                        MapObject.Cmap?.markerManager.hide('preview');
+                        MapObject.Cmap?.markerManager.hide('currentBrand');
+                    }
+                })
             }
-        }
+        },
+        workState(id: number) {
+            switch (id) {
+                case 1:
+                    return <div class={work_state} style={{ background: 'linear-gradient(91deg, #F5BAA4, #FBA797, #FE9A95)' }}>营业中</div>;
+                case 2:
+                    return <div class={work_state} style={{ background: '#F2B063' }}>维护中</div>;
+                case 3:
+                    return <div class={work_state} style={{ background: '#B3B3B3' }}>休息中</div>;
+                default:
+                    return null
+            }
+        },
     },
     render() {
         return <div id={container} style={{ height: `${SearchState.isShowSort ? '100%' : 'auto'}` }}>
@@ -292,8 +406,26 @@ export default defineComponent({
                         SearchState.isShowSort = true;
                         SearchState.showCloseBtn = true;
                         MapObject.hideIndex?.();
+                        // 销毁屏幕上的点
+                        if (SortBoxState.pointList.length > 0) {
+                            SortBoxState.pointList?.map((item, index) => {
+                                if (MapObject.Cmap?.markerManager.has(`id${index}`)) {
+                                    MapObject.Cmap?.markerManager.remove(`id${index}`);
+                                }
+                            });
+                        }
                     }}
-                    onKeypress={e => this.handleSearch(e)}
+                    onKeypress={e => {
+                        if (e.keyCode && e.keyCode === 13) {
+                            // @ts-ignore
+                            if (`${e.target?.value}`) {
+                                // @ts-ignore
+                                SortBoxState.SortBoxTitle = `${e.target?.value}`;
+                                // @ts-ignore
+                                this.handleSearch(`${e.target?.value}`);
+                            }
+                        }
+                    }}
                 />
                 <div class={icon}>
                     <Icon type="search" color="#7D7562" size={16} />
@@ -311,61 +443,42 @@ export default defineComponent({
                     <Icon type="wrong" color="#7D7562" size={13} />
                 </div>
             </div>
-            <div class={search_type} style={{ display: `${SearchState.isShowSort && !SelfInputState.isShow ? 'flex' : 'none'}` }}>
-                <div class={`${this.floorContent ? type_active : ''}`}
-                    onClick={() => {
-                        this.sortContent = false;
-                        this.floorContent = !this.floorContent;
-                        FloorBoxState.isShow = false;
-                    }}
-                >
-                    <div>{this.currentFloor ? this.currentFloor : '楼层'}</div>
-                </div>
-                <div class={`${this.sortContent ? type_active : ''}`}
-                    onClick={() => {
-                        this.floorContent = false;
-                        this.sortContent = !this.sortContent;
-                        FloorBoxState.isShow = false;
-                        this.clearFloorType();
-                    }}
-                >
-                    <div>分类</div>
-                </div>
-            </div>
-            <div class={floor_content} style={{ display: `${SearchState.isShowSort && this.floorContent ? 'block' : 'none'}` }}>
-                <div
-                    class={`${this.allFloorStatus ? floor_active : ''}`}
-                    onClick={() => { this.clearFloorType(); }}>全部楼层
-                </div>
-                {this.floorList.map((item, index) => {
-                    return <div>
-                        <div
-                            style={{ color: `${this.floorType === index ? '#FFE5A7' : '#fff'}` }}
-                            onClick={() => {
-                                this.allFloorStatus = false;
-                                this.floorType = index;
-                                this.currentFloor = item.floor;
-                                this.floorContentType = -1;
-                                this.floorContent = false;
-                                FloorBoxState.isShow = true;
-                            }}>
-                            {item.floor}
-                        </div>
-                        {item.part.map((i, index_) => {
-                            return <div
-                                style={{ color: `${this.floorType === index && this.floorContentType === index_ ? '#FFE5A7' : '#fff'}` }}
-                                onClick={() => {
-                                    this.allFloorStatus = false;
-                                    this.floorType = index;
-                                    this.floorContentType = index_;
-                                }}>
-                                {i.partType}
-                            </div>;
-                        })}
+            <div class={search_type} style={{ display: `${SearchState.isShowSort ? 'flex' : 'none'}` }}>
+                {this.searchType.map((item, index) => {
+                    return <div class={`${this.currentSearchType === index ? type_active : ''}`}
+                        onClick={() => {
+                            SearchState.isShowSort = true;
+                            this.currentSearchType = index;
+                        }}
+                    >
+                        {item.type === 1 ? <div>{this.currentFloor ? this.currentFloor : '楼层'}</div> : <div>{item.name}</div>}
                     </div>;
                 })}
             </div>
-            <div class={hot_recommend} style={{ display: `${SearchState.isShowSort && !this.sortContent && !this.floorContent && !FloorBoxState.isShow && !SelfInputState.isShow ? 'flex' : 'none'}` }}>
+            <div class={floor_content} style={{ display: `${SearchState.isShowSort && this.currentSearchType === 0 ? 'block' : 'none'}` }}>
+                <div>
+                    <div
+                        class={`${this.allFloorStatus ? floor_active : ''}`}
+                        onClick={() => { this.clearFloorType(); }}>全部楼层
+                    </div>
+                    {this.floorList.map((item, index) => {
+                        return <div>
+                            <div
+                                style={{ color: `${this.floorType === index ? '#C6A76E' : '#000'}`, width: '24px' }}
+                                onClick={() => {
+                                    this.allFloorStatus = false;
+                                    this.floorType = index;
+                                    this.currentFloor = item.floor;
+                                    this.currentSearchType = -1;
+                                    this.showfloorRes = true;
+                                }}>
+                                {item.floor}
+                            </div>
+                        </div>;
+                    })}
+                </div>
+            </div>
+            {/* <div class={hot_recommend} style={{ display: `${SearchState.isShowSort && !SortBoxState.isShow  ? 'flex' : 'none'}` }}>
                 <div class='flex-start'>
                     <div>热门推荐 :</div>
                     <div class={recommend_list}>
@@ -397,8 +510,7 @@ export default defineComponent({
                                                     mapManager.zoomTo(0.4);
                                                     mapManager.pitchTo(0);
                                                     FloorState.isShow = true;
-                                                    FloorBoxState.isSearchRes = true;
-                                                    FloorBoxState.FloorBoxTitle = this.searchValue;
+                                                    SortBoxState.FloorBoxTitle = this.searchValue;
                                                 }
                                             }}>
                                             {item.storeType}
@@ -428,107 +540,246 @@ export default defineComponent({
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class={sort_content} style={{ display: `${SearchState.isShowSort && this.sortContent ? 'block' : 'none'}` }}>
+            </div> */}
+            <div class={sort_content} style={{ display: `${SearchState.isShowSort && this.currentSearchType === 1 ? 'block' : 'none'}` }}>
                 <div>
                     <div>
-                        <div class={sort_title}>服务</div>
-                        <div class={sort_list}>
-                            <div>
-                                {this.storeSort?.map((item, index) => {
-                                    if (index < 4) {
-                                        return <div class={sort_item}>
-                                            <div
-                                                class={`${this.currentStoreType === index ? active : ''}`}
-                                                onClick={() => {
-                                                    this.currentFacilityType = -1;
-                                                    this.currentStoreType = index;
-                                                    this.sortContent = false;
-                                                    FloorBoxState.isShow = true;
-                                                    console.log('搜索' + item.storeType);
-                                                    let resIndex = -1;
-                                                    FloorBoxState.lookStoreType.forEach((i, index) => {
-                                                        if (i.name === item.storeType) {
-                                                            resIndex = index;
-                                                        }
-                                                    })
-                                                    FloorBoxState.currentTypeIndex = resIndex;
-                                                }}>
-                                                {item.storeType}
-                                            </div>
-                                        </div>;
-                                    }
-                                })}
-                            </div>
-                            <div>
-                                {this.storeSort?.map((item, index) => {
-                                    if (index > 3) {
-                                        return <div class={sort_item}>
-                                            <div
-                                                class={`${this.currentStoreType === index ? active : ''}`}
-                                                onClick={() => {
-                                                    this.currentFacilityType = -1;
-                                                    this.currentStoreType = index;
-                                                    this.sortContent = false;
-                                                    FloorBoxState.isShow = true;
-                                                    console.log('搜索' + item.storeType);
-                                                }}>
-                                                {item.storeType}
-                                            </div>
-                                        </div>;
-                                    }
-                                })}
+                        <div>
+                            <div class={sort_title}>服务</div>
+                            <div class={sort_list}>
+                                <div>
+                                    {this.storeSort?.map((item, index) => {
+                                        if (index < 4) {
+                                            return <div class={sort_item}>
+                                                <div
+                                                    class={`${this.currentStoreType === index ? active : ''}`}
+                                                    onClick={() => {
+                                                        this.currentStoreType = index;
+                                                        SortBoxState.isShow = true;
+                                                        SortBoxState.SortBoxTitle = item.storeType;
+                                                        this.handleSearch(item.storeType);
+                                                    }}>
+                                                    {item.storeType}
+                                                </div>
+                                            </div>;
+                                        }
+                                    })}
+                                </div>
+                                <div>
+                                    {this.storeSort?.map((item, index) => {
+                                        if (index > 3 && index < 8) {
+                                            return <div class={sort_item}>
+                                                <div
+                                                    class={`${this.currentStoreType === index ? active : ''}`}
+                                                    onClick={() => {
+                                                        this.currentStoreType = index;
+                                                        SortBoxState.isShow = true;
+                                                        SortBoxState.SortBoxTitle = item.storeType;
+                                                        this.handleSearch(item.storeType);
+                                                    }}>
+                                                    {item.storeType}
+                                                </div>
+                                            </div>;
+                                        }
+                                    })}
+                                </div>
+                                <div>
+                                    {this.storeSort?.map((item, index) => {
+                                        if (index > 7) {
+                                            return <div class={sort_item}>
+                                                <div
+                                                    class={`${this.currentStoreType === index ? active : ''}`}
+                                                    onClick={() => {
+                                                        this.currentStoreType = index;
+                                                        SortBoxState.isShow = true;
+                                                        SortBoxState.SortBoxTitle = item.storeType;
+                                                        this.handleSearch(item.storeType);
+                                                    }}>
+                                                    {item.storeType}
+                                                </div>
+                                            </div>;
+                                        }
+                                    })}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <div class={sort_title}>设施</div>
-                        <div class={sort_list}>
-                            <div>
-                                {this.facilitySort?.map((item, index) => {
-                                    if (index < 4) {
-                                        return <div class={sort_item}>
-                                            <div
-                                                class={`${this.currentFacilityType === index ? active : ''}`}
-                                                onClick={() => {
-                                                    this.currentStoreType = -1;
-                                                    this.currentFacilityType = index;
-                                                    this.sortContent = false;
-                                                    FloorBoxState.isShow = true;
-                                                    console.log('搜索' + item.facilityType);
-                                                }}>
-                                                {item.facilityType}
-                                            </div>
-                                        </div>;
-                                    }
-                                })}
-                            </div>
-                            <div>
-                                {this.facilitySort?.map((item, index) => {
-                                    if (index > 3) {
-                                        return <div class={sort_item}>
-                                            <div
-                                                class={`${this.currentFacilityType === index ? active : ''}`}
-                                                onClick={() => {
-                                                    this.currentStoreType = -1;
-                                                    this.currentFacilityType = index;
-                                                    this.sortContent = false;
-                                                    FloorBoxState.isShow = true;
-                                                    console.log('搜索' + item.facilityType);
-
-                                                }}>
-                                                {item.facilityType}
-                                            </div>
-                                        </div>;
-                                    }
-                                })}
+                        <div>
+                            <div class={sort_title}>设施</div>
+                            <div class={sort_list}>
+                                <div>
+                                    {this.facilitySort?.map((item, index) => {
+                                        if (index < 4) {
+                                            return <div class={sort_item}>
+                                                <div
+                                                    class={`${this.currentFacilityType === index ? active : ''}`}
+                                                    onClick={() => {
+                                                        this.currentFacilityType = index;
+                                                        SortBoxState.isShow = true;
+                                                        SortBoxState.SortBoxTitle = item.facilityType;
+                                                        this.handleSearch(item.facilityType);
+                                                    }}>
+                                                    {item.facilityType}
+                                                </div>
+                                            </div>;
+                                        }
+                                    })}
+                                </div>
+                                <div>
+                                    {this.facilitySort?.map((item, index) => {
+                                        if (index > 3) {
+                                            return <div class={sort_item}>
+                                                <div
+                                                    class={`${this.currentFacilityType === index ? active : ''}`}
+                                                    onClick={() => {
+                                                        this.currentFacilityType = index;
+                                                        SortBoxState.isShow = true;
+                                                        SortBoxState.SortBoxTitle = item.facilityType;
+                                                        this.handleSearch(item.facilityType);
+                                                    }}>
+                                                    {item.facilityType}
+                                                </div>
+                                            </div>;
+                                        }
+                                    })}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <FloorBox />
-            <SelfInput />
+            <div class={default_content} style={{ display: `${SearchState.isShowSort && this.currentSearchType === 2 ? 'block' : 'none'}` }}>
+                <div>
+                    {this.defaultType.map((item, index) => {
+                        return <div class={`${this.currentDefaultType === index ? type_active : ''}`}
+                            onClick={() => {
+                                this.currentDefaultType = index
+                                // SortBoxState.isShow = true;
+                            }}>
+                            {item.name}
+                        </div>;
+                    })}
+                </div>
+            </div>
+            <div class={floor_box} style={{ display: `${this.showfloorRes ? 'block' : 'none'}` }}>
+                <div class={floor_res}>
+                    <div class={store_list}>
+                        <div>该层全部商户</div>
+                        <div class={store_type}>
+                            {this.lookStoreType?.map((item, index) => {
+                                return <div
+                                    class={`${this.currentLookIndex === index ? active : ''}`}
+                                    onClick={() => {
+                                        this.currentLookIndex = index;
+                                        if (item.type === 4) {
+                                            // 楼层设施
+                                            this.storeList = [
+                                                {
+                                                    sort: '设施',
+                                                    img: '',
+                                                    title: '太古汇-洗手间',
+                                                    type: '男女洗手间',
+                                                    time: '10:00-22:00',
+                                                    state: 0,
+                                                }, {
+                                                    sort: '设施',
+                                                    img: '',
+                                                    title: '太古汇-扶梯',
+                                                    type: '扶梯',
+                                                    time: '10:00-22:00',
+                                                    state: 0,
+                                                }, {
+                                                    sort: '设施',
+                                                    img: '',
+                                                    title: '太古汇-母婴室',
+                                                    type: '母婴室',
+                                                    time: '10:00-22:00',
+                                                    state: 0,
+                                                }, {
+                                                    sort: '设施',
+                                                    img: '',
+                                                    title: '太古汇-直梯',
+                                                    type: '直梯（客梯）',
+                                                    time: '10:00-22:00',
+                                                    state: 0,
+                                                }, {
+                                                    sort: '设施',
+                                                    img: '',
+                                                    title: '太古汇-座椅',
+                                                    type: '休息区/座椅',
+                                                    time: '10:00-22:00',
+                                                    state: 0,
+                                                },
+                                            ];
+                                        } else {
+                                            this.storeList = [
+                                                {
+                                                    sort: '全部',
+                                                    img: imgUrl,
+                                                    title: '优衣库',
+                                                    type: '休闲服饰',
+                                                    time: '10:00-22:00',
+                                                    state: 1,
+                                                }, {
+                                                    sort: '全部',
+                                                    img: imgUrl,
+                                                    title: '优衣库',
+                                                    type: '休闲服饰',
+                                                    time: '10:00-22:00',
+                                                    state: 2,
+                                                }, {
+                                                    sort: '全部',
+                                                    img: imgUrl,
+                                                    title: '优衣库',
+                                                    type: '休闲服饰',
+                                                    time: '10:00-22:00',
+                                                    state: 1,
+                                                }, {
+                                                    sort: '全部',
+                                                    img: imgUrl,
+                                                    title: '优衣库',
+                                                    type: '休闲服饰',
+                                                    time: '10:00-22:00',
+                                                    state: 3,
+                                                }, {
+                                                    sort: '全部',
+                                                    img: imgUrl,
+                                                    title: '优衣库',
+                                                    type: '休闲服饰',
+                                                    time: '10:00-22:00',
+                                                    state: 1,
+                                                },
+                                            ]
+                                        }
+                                    }}>
+                                    {item.name}({item.number})
+                                </div>;
+                            })}
+                        </div>
+                        <div class={show_store}>
+                            {this.storeList.map(item => {
+                                return <div>
+                                    <div>
+                                        {item.img ?
+                                            <img src={item.img} alt="图片找不到" />
+                                            : <div style={{ width: '53px', height: '53px', background: '#bbb' }}></div>
+                                        }
+                                    </div>
+                                    <div class={store_info}>
+                                        <div class={store_title}>{item.title}</div>
+                                        {item.sort !== '设施' ? <div>
+                                            <div>业态类型: {item.type}</div>
+                                        </div> : <div>
+                                            <div>{item.type}</div>
+                                        </div>}
+                                    </div>
+                                    <img src={locatURL} alt="图片找不到" />
+                                    {this.workState(item.state)}
+                                </div>;
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div >;
     },
 });

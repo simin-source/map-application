@@ -1,6 +1,5 @@
 {
     "rulesDirectory": [],
-    "defaultSeverity": "error",
     "rules": {
         "indent": [
             true,
@@ -256,6 +255,30 @@
                     "private-instance-method"
                 ]
             }
-        ]
+        ],
+        "no-multi-spaces": [
+            true,
+            {
+                "exceptions": {
+                    "ImportDeclaration": true,
+                    "Property": false
+                }
+            }
+        ],
+        "ter-func-call-spacing": [
+            true,
+            "never"
+        ],
+        "lines-between-class-members": true,
+        "block-spacing": [
+            true,
+            "always"
+        ],
+        "jsx-alignment": true,
+        "jsx-wrap-multiline": true,
+        "jsx-no-string-ref": true,
+        "jsx-no-multiline-js": false,
+        "jsx-space-before-trailing-slash": true,
+        "jsx-no-lambda": false
     }
 }

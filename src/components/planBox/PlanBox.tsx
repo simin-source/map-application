@@ -5,12 +5,11 @@ import {
     plan_type,
     active
 } from "./PlanBox.module.scss";
-import straightUrl from '@/assets/img/straight.png';
-import staircaseUrl from '@/assets/img/staircase.png';
+import straightUrl from '@/assets/img/straight2.png';
+import staircaseUrl from '@/assets/img/staircase2.png';
 import { navInfoState } from "../navInfo/NavInfo";
 import { mapManager } from "@/map/MapManager";
 import { MapObject } from "@/map/Map";
-import { CarState } from "../carBox/CarBox";
 
 export const planState: {
     isPlan: boolean;
