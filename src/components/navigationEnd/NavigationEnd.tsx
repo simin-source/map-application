@@ -14,6 +14,7 @@ import { FloorState } from '../control/floor/Floor';
 import { zoomState } from '../control/zoom/Zoom';
 import { MapObject } from '@/map/Map';
 import { StoreState } from '../storeBox/StoreBox';
+import { clearNavInfoState, navInfoState } from '../navInfo/NavInfo';
 
 export const NavigationState: {
     show: boolean;
@@ -52,7 +53,14 @@ const InfoBox = defineComponent({
                 <img src={navEndUrl} alt='图片找不到' />
                 <div>确认结束导航？</div>
                 <div>
-                    <div>取消</div>
+                    <div onClick={() => {
+                        NavigationState.show = NavigationState.isEnd = false;
+                        navInfoState.isParseMock = false;
+                        SearchState.searchValue
+                        navInfoState.currentLine.runMock();
+                    }}>
+                        取消
+                    </div>
                     <div onClick={this.confirm}>确定</div>
                 </div>
             </div>
@@ -70,6 +78,9 @@ const InfoBox = defineComponent({
             MapObject.showRightSet = true;
             MapObject.endMarker.hide();
             MapObject.startMarker.hide();
+            if (navInfoState.onClose) navInfoState.onClose();
+            clearNavInfoState();
+            SearchState.searchValue = '';
         },
     },
 });

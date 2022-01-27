@@ -24,6 +24,7 @@ import {
 } from './Map.module.scss';
 import { navigationEnd } from '@/components/navigationEnd/NavigationEnd';
 import SortBox, { SortBoxState } from '@/components/sortBox/SortBox';
+import { PointType } from '@/types';
 
 export const MapControlSpace: {
     T?: number;
@@ -36,6 +37,8 @@ export const MapControlSpace: {
 export const MapObject: {
     backIndex?: () => void;
     hideIndex?: () => void;
+    updateStart?: () => void;
+    updateEnd?: () => void;
     Cmap: any;
     currentInfoBox: any;
     startMarker: any;
@@ -155,8 +158,9 @@ export default defineComponent({
                 };
                 navInfoState.rdfl = rdFl;
                 StoreState.currentPoint = markData;
+                console.log('判断这个点是否存在');
+                console.log(Cmap.contains(markData.location[0], markData.location[1])); //导致mockStartPoint采用高德
                 MapObject.previewMarker.show(markData);
-                StoreState.isStoreBox = true;
                 MapObject.currentInfoBox.show(markData);
                 if (SortBoxState.pointList.length > 0) {
                     SortBoxState.pointList?.map((item, index) => {
@@ -165,7 +169,12 @@ export default defineComponent({
                         }
                     });
                 }
-                if (!navigation.isMock) {
+                if (navigation.isMock) {
+                    StoreState.isStoreBox = false;
+                } else if (!StoreState.startPoint.rdFl) {
+                    // 画线条件：需要先确认终点，再确认起点
+                    // 当起点确认终点未确认时，通过设置终点按钮重新画线
+                    StoreState.isStoreBox = true;
                     StoreState.endPoint = markData;
                     // 测试数据
                     // StoreState.endPoint = {
@@ -207,9 +216,36 @@ export default defineComponent({
             compassState.isShow = false;
             zoomState.isShow = false;
             FloorState.isShow = false;
+            // 当重新搜索时隐藏上次导航的起点终点                  
+            if (MapObject.Cmap?.markerManager.has('current') && MapObject.Cmap?.markerManager.has('target')) {
+                MapObject.Cmap?.markerManager.hide('current');
+                MapObject.Cmap?.markerManager.hide('target');
+            }
             // 隐藏点的信息框
             MapObject.currentInfoBox.hide();
             StoreState.isStoreBox = false;
+        };
+        MapObject.updateStart = () => {
+            // 更新起点
+            MapObject.previewMarker.hide();
+            if (MapObject.currentRdfl !== StoreState.startPoint.rdFl) {
+                MapObject.Cmap?.switchFloor(1, StoreState.startPoint.rdFl);
+            }
+            mapManager.moveTo(StoreState.startPoint.location);
+            navigation.mockStartPoint = StoreState.startPoint;
+            MapObject.startMarker.show(StoreState.startPoint);
+            MapObject.currentInfoBox.hide();
+            StoreState.isStoreBox = false;
+        };
+        MapObject.updateEnd = () => {
+            // 更新终点
+            MapObject.previewMarker.hide();
+            if (MapObject.currentRdfl !== StoreState.endPoint.rdFl) {
+                MapObject.Cmap?.switchFloor(1, StoreState.endPoint.rdFl);
+            }
+            mapManager.moveTo(StoreState.endPoint.location);
+            navigation.destination(StoreState.endPoint, true);
+            MapObject.endMarker.show(StoreState.endPoint);
         };
         // @ts-ignore
         // window.wx.miniProgram.getEnv((res: any) => {

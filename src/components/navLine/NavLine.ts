@@ -55,20 +55,21 @@ export class NavLine {
     private _lastCoord?: [number, number];
     private _lastDirection = 0;
 
-    async draw(sLng: number, sLat: number, sRdFl: number, dLng: number, dLat: number, dRdFl: number, type = 0) {
+    async draw(sLng: number, sLat: number, sRdFl: number, dLng: number, dLat: number, dRdFl: number, type = 0, connType?: number[]) {
         const { routeManager, _centmap } = this;
         if (!routeManager || !_centmap) return;
         this.routeReady = false;
         let pathInfo;
         if (this._type === 'mock') {
             const mock = getStartAndEnd();
-            pathInfo = await routeManager.route(mock[0][0], mock[0][1], 1, mock[1][0], mock[1][1], 1, type);
+            pathInfo = await routeManager.route(mock[0][0], mock[0][1], 1, mock[1][0], mock[1][1], 1, type, connType ? connType : [0]);
         } else {
-            pathInfo = await routeManager.route(sLng, sLat, sRdFl, dLng, dLat, dRdFl, type);
+            pathInfo = await routeManager.route(sLng, sLat, sRdFl, dLng, dLat, dRdFl, type, [0]);
         }
-        console.log('画路线');
-        console.log(sLng, sLat, sRdFl, dLng, dLat, dRdFl, type);
-        console.log(pathInfo);
+        // console.log('画路线');
+        // console.log(sLng, sLat, sRdFl, dLng, dLat, dRdFl, type);
+        // console.log(pathInfo);
+        // console.log(routeManager.route);
         this.routeReady = true;
         this.toggleLine();
         return pathInfo as { distance: number };

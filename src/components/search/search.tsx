@@ -15,17 +15,18 @@ import imgUrl from '@/assets/img/uniqlo.png';
 import baseImg from '@/assets/img/base_point.png';
 import locatURL from '@/assets/img/locate_icon.png';
 import { SortBoxState } from '../sortBox/SortBox';
-import { PointMark } from '../pointMark/PointMark';
-import { navInfoState } from '../navInfo/NavInfo';
+import { navigation } from '../navInfo/NavInfo';
 
 export const SearchState: {
     isShowSort: boolean;
     isShowSearch: boolean;
     showCloseBtn: boolean;
+    searchValue: string;
 } = reactive({
     isShowSort: false,
     isShowSearch: true,
     showCloseBtn: false,
+    searchValue: '',
 });
 
 export default defineComponent({
@@ -115,7 +116,6 @@ export default defineComponent({
                     storeType: 'CHANEL'
                 },
             ],
-            searchValue: '',
             resMarkInfo: {
                 "fl_name": "F1",
                 "lnglat": [
@@ -313,7 +313,17 @@ export default defineComponent({
     mounted() {
         watch(() => MapObject.currentRdfl, rdfl => {
             // 监听楼层变化
-            this.currentFloorRes();
+            if (!navigation.isMock) {
+                this.removePoint();
+                StoreState.isStoreBox = false;
+                // // 隐藏上次楼层信息框
+                // if (MapObject.Cmap?.markerManager.has('preview') && MapObject.Cmap?.markerManager.has('currentBrand')) {
+                //     MapObject.Cmap?.markerManager.hide('preview');
+                //     MapObject.Cmap?.markerManager.hide('currentBrand');
+                //     StoreState.isStoreBox = false;
+                // }
+                this.currentFloorRes();
+            }
         });
     },
     methods: {
@@ -321,7 +331,6 @@ export default defineComponent({
             SearchState.showCloseBtn = false;
             SearchState.isShowSort = false;
             this.showfloorRes = false;
-            this.searchValue = '';
             this.currentFloor = '';
             this.currentSearchType = 0;
             this.currentStoreType = -1;
@@ -337,6 +346,7 @@ export default defineComponent({
             this.allFloorStatus = true;
         },
         handleSearch(name: string) {
+            SearchState.searchValue = name;
             mapManager.zoomTo(0.4);
             mapManager.pitchTo(0);
             searchStore({ name }).then(res => {
@@ -348,11 +358,13 @@ export default defineComponent({
             })
         },
         currentFloorRes() {
+            console.log('添加marker');
             if (SortBoxState.pointList.length === 1) {
                 const { center, rd_fl, fl_name, name } = SortBoxState.pointList[0];
                 const [lng, lat, height] = center;
-                MapObject.Cmap?.switchFloor(1, rd_fl);
-                // 添加marker
+                if (MapObject.currentRdfl !== rd_fl) {
+                    MapObject.Cmap?.switchFloor(1, rd_fl);
+                }
                 const markData = {
                     location: [lng, lat] as [number, number],
                     height: height ? height : 0.9,
@@ -360,10 +372,10 @@ export default defineComponent({
                     fl_name,
                     name,
                 };
-                StoreState.currentPoint = markData;
-                StoreState.endPoint = markData;
-                MapObject.previewMarker.show(markData);
-                MapObject.currentInfoBox.show(markData);
+                StoreState.currentPoint =StoreState.endPoint= markData;
+                MapObject.previewMarker.show(StoreState.currentPoint);
+                MapObject.currentInfoBox.show(StoreState.currentPoint);
+                mapManager.moveTo([lng, lat]);
             } else {
                 SortBoxState.pointList.forEach((item, index) => {
                     if (MapObject.currentRdfl === item.rd_fl) {
@@ -376,11 +388,7 @@ export default defineComponent({
                             marker: dom,
                             lnglat: [lng, lat],
                         })
-                    }
-                    MapObject.Cmap?.markerManager.show();
-                    if (MapObject.Cmap?.markerManager.has('preview') && MapObject.Cmap?.markerManager.has('currentBrand')) {
-                        MapObject.Cmap?.markerManager.hide('preview');
-                        MapObject.Cmap?.markerManager.hide('currentBrand');
+                        MapObject.Cmap?.markerManager.show(`id${index}`);
                     }
                 })
             }
@@ -397,23 +405,28 @@ export default defineComponent({
                     return null
             }
         },
+        removePoint() {
+            console.log('销毁marker');
+            if (SortBoxState.pointList.length > 0) {
+                SortBoxState.pointList?.map((item, index) => {
+                    if (MapObject.Cmap?.markerManager.has(`id${index}`)) {
+                        MapObject.Cmap?.markerManager.remove(`id${index}`);
+                    }
+                });
+            }
+        }
     },
     render() {
         return <div id={container} style={{ height: `${SearchState.isShowSort ? '100%' : 'auto'}` }}>
             <div class={search_box} style={{ display: `${SearchState.isShowSearch ? 'block' : 'none'}`, background: `${SearchState.isShowSort ? '#fff' : 'transparent'}` }}>
-                <input type='text' placeholder='请输入搜索内容' value={this.searchValue}
+                <input type='text' placeholder='请输入搜索内容' value={SearchState.searchValue}
                     onClick={() => {
+                        SearchState.searchValue = '';
                         SearchState.isShowSort = true;
                         SearchState.showCloseBtn = true;
                         MapObject.hideIndex?.();
                         // 销毁屏幕上的点
-                        if (SortBoxState.pointList.length > 0) {
-                            SortBoxState.pointList?.map((item, index) => {
-                                if (MapObject.Cmap?.markerManager.has(`id${index}`)) {
-                                    MapObject.Cmap?.markerManager.remove(`id${index}`);
-                                }
-                            });
-                        }
+                        this.removePoint();
                     }}
                     onKeypress={e => {
                         if (e.keyCode && e.keyCode === 13) {
@@ -502,15 +515,15 @@ export default defineComponent({
                                             onClick={() => {
                                                 this.currentFacilityType = -1;
                                                 this.currentStoreType = index;
-                                                this.searchValue = item.storeType;
-                                                console.log('搜索' + this.searchValue);
+                                                SearchState.searchValue = item.storeType;
+                                                console.log('搜索' + SearchState.searchValue);
                                                 SearchState.isShowSort = false;
 
                                                 if (SearchState.centmap) {
                                                     mapManager.zoomTo(0.4);
                                                     mapManager.pitchTo(0);
                                                     FloorState.isShow = true;
-                                                    SortBoxState.FloorBoxTitle = this.searchValue;
+                                                    SortBoxState.FloorBoxTitle = SearchState.searchValue;
                                                 }
                                             }}>
                                             {item.storeType}
@@ -528,8 +541,8 @@ export default defineComponent({
                                             onClick={() => {
                                                 this.currentFacilityType = -1;
                                                 this.currentStoreType = index;
-                                                this.searchValue = item.storeType;
-                                                console.log('搜索' + this.searchValue);
+                                                SearchState.searchValue = item.storeType;
+                                                console.log('搜索' + SearchState.searchValue);
                                                 SearchState.isShowSort = false;
                                             }}>
                                             {item.storeType}

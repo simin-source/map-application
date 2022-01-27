@@ -1,6 +1,6 @@
 import { defineComponent, reactive } from 'vue';
 import {
-    sort_box, spread_icon, search_res, floor_title, show_store, store_type, store_list, store_info, store_title,
+    sort_box, spread_icon, search_res, floor_title, show_store, store_list, store_info, store_title,
     active, close, work_state
 } from './SortBox.module.scss';
 
@@ -11,8 +11,6 @@ import { SearchState } from '../search/search';
 import arrowLeftUrl from '../../assets/img/arrow_left.png';
 import { StoreState } from '../storeBox/StoreBox';
 import { mapManager } from '@/map/MapManager';
-import { PointMark } from '../pointMark/PointMark';
-import { navigation } from '../navInfo/NavInfo';
 import { SearchResType } from '@/types';
 
 export const SortBoxState: {
@@ -31,33 +29,6 @@ export default defineComponent({
         return {
             isSpread: false,
         }
-    },
-    mounted() {
-        // SortBoxState.pointList = [
-        // {
-        //     bd_name: "太古汇",
-        //     cat_id: 105007001,
-        //     center: [14.40238, 1.9020716, 0.8],
-        //     fl_id: 3,
-        //     fl_name: "MU",
-        //     index: 5,
-        //     name: "Dior PARFUMS",
-        //     number: "",
-        //     rd_fl: 3,
-        //     seq_id: 1,
-        // }, {
-        //     bd_name: "太古汇",
-        //     cat_id: 105007001,
-        //     center: [14.40238, 1.9020716, 0.8],
-        //     fl_id: 3,
-        //     fl_name: "MU",
-        //     index: 5,
-        //     name: "Dior PARFUMS",
-        //     number: "",
-        //     rd_fl: 3,
-        //     seq_id: 1,
-        // }
-        // ]
     },
     methods: {
         workState(id?: number) {
@@ -106,6 +77,7 @@ export default defineComponent({
                     <div class={show_store}>
                         {SortBoxState.pointList?.map((item, index) => {
                             return <div onClick={() => {
+                                console.log('选择指定marker');
                                 const { center, fl_name, rd_fl, name, seq_id } = item;
                                 const [lng, lat, height] = center;
                                 const markData = {
@@ -116,6 +88,15 @@ export default defineComponent({
                                     name,
                                     seq_id
                                 };
+                                // 返回首页并打开指定楼层的品牌
+                                MapObject.backIndex?.();
+                                SearchState.searchValue = name;
+                                if (MapObject.currentRdfl !== rd_fl) {
+                                    MapObject.Cmap?.switchFloor(seq_id, rd_fl);
+                                }
+                                mapManager.moveTo([lng, lat]);
+                                mapManager.zoomTo(0.4);
+                                mapManager.pitchTo(0);
                                 if (SortBoxState.pointList.length > 0) {
                                     SortBoxState.pointList?.map((item, index) => {
                                         if (MapObject.Cmap?.markerManager.has(`id${index}`)) {
@@ -123,16 +104,11 @@ export default defineComponent({
                                         }
                                     });
                                 }
-                                StoreState.currentPoint = markData;
-                                StoreState.endPoint = markData;
-                                MapObject.previewMarker.show(markData);
-                                MapObject.currentInfoBox.show(markData);
-                                MapObject.Cmap?.markerManager.hide('currentBrand');
-                                MapObject.Cmap?.switchFloor(seq_id, rd_fl);
-                                mapManager.zoomTo(0.4);
-                                mapManager.pitchTo(0);
+                                StoreState.currentPoint = StoreState.endPoint = markData;
+                                MapObject.previewMarker.show(StoreState.currentPoint);
+                                MapObject.currentInfoBox.show(StoreState.currentPoint);
+                                StoreState.isStoreBox = true;
                                 this.isSpread = false;
-                                MapObject.backIndex?.();
                             }}>
                                 <div>
                                     <img src={imgUrl} alt="图片找不到" />

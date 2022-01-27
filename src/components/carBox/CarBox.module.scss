@@ -408,6 +408,7 @@
 
             > .detail_locate {
                 display: flex;
+                flex-direction: column;
                 justify-content: flex-start;
                 align-items: center;
                 width: calc(100% - 60px);
@@ -457,6 +458,16 @@
                         color: #a9a9a9;
                         line-height: 13px;
                         text-align: center;
+                    }
+
+                    .select_btn {
+                        width: 80px;
+                        height: 24px;
+                        background: linear-gradient(91deg, #30adff, #3c8dff, #3c8dff);
+                        border-radius: 6px;
+                        text-align: center;
+                        line-height: 22px;
+                        color: #fff;
                     }
                 }
             }

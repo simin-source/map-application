@@ -21,13 +21,9 @@ import { StoreState } from "@/components/storeBox/StoreBox";
 import { MapObject } from "@/map/Map";
 import { Centmap } from "@/native/Centmap";
 import Icon from "@/components/icon/Icon";
-import { compassState } from "../control/compass/Compass";
-import { zoomState } from "../control/zoom/Zoom";
-import { FloorState } from "../control/floor/Floor";
-import { SearchState } from "../search/search";
-import { RightBoxState } from "../rightSet/RightSet";
 import SelfInput, { SelfInputState } from "../selfInput/SelfInput";
-import { ConfirmState } from "../confirmPoint/ConfirmPoint";
+import { searchStore } from "@/services";
+import { RightBoxState } from "../rightSet/RightSet";
 
 export const navInfoState: {
     onNav?: () => void;
@@ -59,7 +55,7 @@ let naviEnd = false;
 let crossLnglat: [number, number] | undefined;
 let crossCurrPathEndPoint: [number, number] | undefined;
 
-function clearNavInfoState() {
+export function clearNavInfoState() {
     // 隐藏清空
     MapObject.endMarker.hide();
     MapObject.startMarker.hide();
@@ -106,7 +102,7 @@ export const NavigationInfoBox = defineComponent({
                     this.isAcrossFloor = false;
                     navInfoState.isParseMock = false;
                     navInfoState.currentLine.runMock();
-                }, 5000);
+                }, 2000);
             }
         });
     },
@@ -135,7 +131,6 @@ export const NavigationInfoBox = defineComponent({
                     navigationEnd.hide();
                     naviEnd = false;
                 });
-                this.close();
                 if (navigation.targetParkingNum) sessionStorage.setItem('curParkingNum', navigation.targetParkingNum);
             } else {
                 // console.log('导航播放开始');
@@ -245,22 +240,55 @@ export const NavigationInfoBox = defineComponent({
                                 onClick={() => {
                                     SelfInputState.isShow = !SelfInputState.isShow;
                                 }}
+                                onKeypress={e => {
+                                    if (e.keyCode && e.keyCode === 13) {
+                                        // console.log(`搜索历史${e.target?.value}`);
+                                        // @ts-ignore
+                                        searchStore({ name: `${e.target?.value}` }).then(res => {
+                                            if (res) SelfInputState.historyContent = SelfInputState.historyContent.concat(res);
+                                        })
+                                    }
+                                }}
                             />
                             {StoreState.startPoint?.fl_name ? <div>{StoreState.startPoint?.fl_name}</div> :
                                 <div class={select_btn}
                                     style={{ background: 'linear-gradient(91deg, #95E476, #83D063, #7AC75A)' }}
-                                    onClick={() => { ConfirmState.confirmEnd = false; ConfirmState.confirmStart = true; }}
+                                    onClick={() => {
+                                        if (navigation.isMock) {
+                                            StoreState.startPoint = StoreState.currentPoint;
+                                            MapObject.updateStart?.();
+                                        }
+                                    }}
                                 >
                                     设为起点
                                 </div>
                             }
                         </div>
                         <div>
-                            <input type="text" value={StoreState.endPoint?.name} placeholder="我的位置" />
+                            <input type="text"
+                                value={StoreState.endPoint?.name}
+                                placeholder="我的位置"
+                                onClick={() => {
+                                    SelfInputState.isShow = !SelfInputState.isShow;
+                                }}
+                                onKeypress={e => {
+                                    if (e.keyCode && e.keyCode === 13) {
+                                        // console.log(`搜索历史${e.target?.value}`);
+                                        // @ts-ignore
+                                        searchStore({ name: `${e.target?.value}` }).then(res => {
+                                            if (res) SelfInputState.historyContent = SelfInputState.historyContent.concat(res);
+                                        })
+                                    }
+                                }}
+                            />
                             {StoreState.endPoint?.fl_name ? <div>{StoreState.endPoint?.fl_name}</div> :
                                 <div class={select_btn}
                                     style={{ background: 'linear-gradient(91deg, #30adff, #3c8dff, #3c8dff)' }}
-                                    onClick={() => { ConfirmState.confirmStart = false; ConfirmState.confirmEnd = true; }}
+                                    onClick={() => {
+                                        StoreState.endPoint = StoreState.currentPoint;
+                                        MapObject.updateEnd?.();
+                                        MapObject.updateStart?.();//先终点，后起点，最后重新画路线
+                                    }}
                                 >
                                     设为终点
                                 </div>
@@ -269,8 +297,19 @@ export const NavigationInfoBox = defineComponent({
                     </div>
                     <div style={{ marginLeft: '10px' }} onClick={() => {
                         let temp = StoreState.endPoint;
+                        navInfoState.isMock = false;
+                        // 更新终点
                         StoreState.endPoint = StoreState.startPoint;
+                        if (StoreState.endPoint.rdFl) {
+                            console.log('更新终点');
+                            MapObject.updateEnd?.();
+                        }
+                        // 更新起点
                         StoreState.startPoint = temp;
+                        if (StoreState.startPoint.rdFl) {
+                            console.log('更新起点');
+                            MapObject.updateStart?.();
+                        }
                     }}>
                         <img src={transformUrl} style={{ width: '20px' }} alt='图片找不到' />
                     </div>
@@ -288,9 +327,9 @@ export const NavigationInfoBox = defineComponent({
                     </div>
                 </div>
                 <div class={over_line}>
-                    <p style={{ background: '#78C458' }}>L1</p>
+                    <p style={{ background: '#78C458' }}>{StoreState.startPoint?.fl_name}</p>
                     {/* img/icon */}
-                    <div>⇧L3</div>
+                    <div style={{ display: `${CarState.isOverLine ? 'block' : 'none'}` }} >⇧{StoreState.endPoint?.fl_name}</div>
                     <div>🏃‍♂️</div>
                     <p style={{ background: '#F17171' }}>终</p>
                     <div class={progress}></div>
@@ -299,10 +338,8 @@ export const NavigationInfoBox = defineComponent({
                     {/* <div class={cur_floor}>当前楼层: L3</div> */}
                     <div>
                         <div class={exit} onClick={() => {
-                            if (navInfoState.onClose) navInfoState.onClose();
+                            navInfoState.isParseMock = true;
                             NavigationState.isEnd = true;
-                            // 隐藏清空
-                            clearNavInfoState();
                         }}>
                             退出
                         </div>
@@ -529,8 +566,7 @@ export class Navigation {
         const { _navLine } = this;
         const { start, end } = this.navPoints;
         if (!_navLine || !start || !end) return;
-
-        const info = await _navLine.draw(...start.location, start.rdFl, ...end.location, end.rdFl);
+        const info = await _navLine.draw(start.location[0], start.location[1], start.rdFl, end.location[0], end.location[1], end.rdFl, 0, RightBoxState.StoreRouteType);
         if (info) navInfoState.pathDistance = +info.distance.toFixed(0);
         return info;
     }
@@ -605,6 +641,12 @@ export class Navigation {
         CarState.isCarStart = false;
         planState.carNav = false;
         CarState.carNav = true; //显示实时导航弹框
+        navInfoState.isParseMock = false;
+        if (StoreState.startPoint?.rdFl === StoreState.endPoint?.rdFl) {
+            CarState.isOverLine = false;
+        } else {
+            CarState.isOverLine = true;
+        }
         navInfoState.currentPointIndex = 0;
         _navLine.runMock();
         navInfoState.onClose = (bearing?: number) => {

@@ -10,15 +10,14 @@ import staircaseUrl from '@/assets/img/staircase2.png';
 import { navInfoState } from "../navInfo/NavInfo";
 import { mapManager } from "@/map/MapManager";
 import { MapObject } from "@/map/Map";
+import { RightBoxState } from "../rightSet/RightSet";
 
 export const planState: {
     isPlan: boolean;
     carNav: boolean;
-    carRouteType: string;
 } = reactive({
     isPlan: false,
     carNav: false,
-    carRouteType: ''
 });
 
 export default defineComponent({
@@ -26,18 +25,21 @@ export default defineComponent({
     data: function () {
         return {
             planContent: [{
+                type: 0,
                 img: '',
-                type: '智能推荐',
+                name: '智能推荐',
                 meter: '253米',
                 time: '5分钟',
             }, {
+                type: 1,
                 img: straightUrl,
-                type: '直梯优先',
+                name: '直梯优先',
                 meter: '220米',
                 time: '3分钟',
             }, {
+                type: 2,
                 img: staircaseUrl,
-                type: '扶梯优先',
+                name: '扶梯优先',
                 meter: '201米',
                 time: '4分钟',
             }],
@@ -65,11 +67,11 @@ export default defineComponent({
                 <div class={plan_type} style={{ display: `${planState.carNav ? 'flex' : 'none'}` }}>
                     {this.planContent?.map((item, index) => {
                         return <div class={`${this.currentPlan === index ? active : ''}`}
-                            onClick={() => { this.currentPlan = index; }}>
+                            onClick={() => { this.currentPlan = index; RightBoxState.StoreRouteType = [item.type]; }}>
                             {item.img ? <div class='flex-center'>
                                 <img src={item.img} style={{ width: '17px', marginRight: '2px' }} alt="图片找不到" />
-                                {item.type}
-                            </div> : <div>{item.type}</div>}
+                                {item.name}
+                            </div> : <div>{item.name}</div>}
                             <div>{item.meter}</div>
                             <div>{item.time}</div>
                         </div>;

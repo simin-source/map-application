@@ -14,12 +14,12 @@ export const RightBoxState: {
     isShow: boolean;
     _3D: boolean;
     ready: boolean;
-    StoreRouteType: string;
+    StoreRouteType: number[];
 } = reactive({
     isShow: false,
     _3D: true,
     ready: false,
-    StoreRouteType: '距离最短',
+    StoreRouteType: [0],
 });
 
 let _easeing = false;
@@ -29,15 +29,19 @@ export default defineComponent({
     data() {
         return {
             clickSwitchBtn: false,
+            currentRouteType: 0,
             planContent: [{
+                type: 0,
                 img: lastestUrl,
-                type: '距离最短',
+                name: '距离最短',
             }, {
+                type: 1,
                 img: staircaseUrl,
-                type: '扶梯',
+                name: '扶梯',
             }, {
+                type: 2,
                 img: straightUrl,
-                type: '直梯',
+                name: '直梯',
             }],
         }
     },
@@ -90,11 +94,11 @@ export default defineComponent({
                 <div class={route_type}>
                     <div class={`flex-between ${route_content}`}>
                         {this.planContent.map(item => {
-                            return <div onClick={() => { RightBoxState.StoreRouteType = item.type; }}>
-                                <div style={{ background: `${RightBoxState.StoreRouteType === item.type ? '#0074ED' : '#fff'}` }}>
+                            return <div onClick={() => { this.currentRouteType = item.type; RightBoxState.StoreRouteType = [item.type]; }}>
+                                <div style={{ background: `${this.currentRouteType === item.type ? '#0074ED' : '#fff'}` }}>
                                     <img src={item.img} alt='图片找不到' />
                                 </div>
-                                <div style={{ color: `${RightBoxState.StoreRouteType === item.type ? '#0074ED' : '#5D5D5D'}` }}>{item.type}</div>
+                                <div style={{ color: `${this.currentRouteType === item.type ? '#0074ED' : '#5D5D5D'}` }}>{item.name}</div>
                             </div>;
                         })}
                     </div>

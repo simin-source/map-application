@@ -1,11 +1,9 @@
 import { MapObject } from "@/map/Map";
 import { defineComponent, reactive } from "vue";
-import { SearchState } from "@/components/search/search";
 import powerImg from '@/assets/img/newpower.png';
 import transformUrl from '@/assets/img/transform.png';
 import del1 from '@/assets/img/del1.png';
 import del2 from '@/assets/img/del2.png';
-import baseImg from '@/assets/img/base_point.png';
 
 import {
     car_box,
@@ -30,20 +28,22 @@ import {
     car_navtop,
     locate_icon,
     detail_locate,
-    layer
+    layer,
+    select_btn
 } from "./CarBox.module.scss";
 import { PointType, SearchResType } from "@/types";
-import { navigation } from "../navInfo/NavInfo";
+import { navigation, navInfoState } from "../navInfo/NavInfo";
 import { StoreState } from "../storeBox/StoreBox";
-import { SelfInputState } from "../selfInput/SelfInput";
+import SelfInput, { SelfInputState } from "../selfInput/SelfInput";
 import PlanBox, { planState } from "../planBox/PlanBox";
-import { carNumber } from "@/services";
+import { carNumber, searchStore } from "@/services";
 import { PointMark } from "../pointMark/PointMark";
 
 export const CarState: {
     isCarBrand: boolean;
     isCarNum: boolean;
     isCarStart: boolean;
+    isOverLine: boolean;
     carNav: boolean;
     parkingNum: string;
     carBrand: string;
@@ -52,6 +52,7 @@ export const CarState: {
     isCarBrand: false,
     isCarNum: false,
     isCarStart: false,
+    isOverLine: false,
     carNav: false,
     parkingNum: '',
     carBrand: '',
@@ -186,7 +187,6 @@ export default defineComponent({
             },
             show_keyboard: false,
             isShowBottom: true,
-            isTranslate: false,
         };
     },
     watch: {
@@ -244,10 +244,8 @@ export default defineComponent({
                 CarState.parkingNum = `${this.defaultCarNum.join('')}`;
                 console.log('车位号寻车' + CarState.parkingNum);
                 carNumber({ number: CarState.parkingNum }).then(res => {
-                    console.log(res);
                     if (res) {
                         this.showCurrentParking(res[0])
-                        console.log(res[0]);
                     }
                 });
             } else {
@@ -263,17 +261,7 @@ export default defineComponent({
             }
         },
         showCurrentParking(res: SearchResType) {
-            // bd_name: "太古汇"
-            // cat_id: 109014001
-            // center: (3) [46.810917, 64.09836, 0.06]
-            // fl_id: 5
-            // fl_name: "P"
-            // index: 442
-            // name: "普通停车位"
-            // number: "J-607"
-            // rd_fl: 5
-            // seq_id: 1
-            const { center, rd_fl, seq_id, fl_name, name, number } = res;
+            const { center, rd_fl, fl_name, name, number } = res;
             const [lng, lat, height] = center;
             const markData = {
                 location: [lng, lat] as [number, number],
@@ -283,26 +271,17 @@ export default defineComponent({
                 name,
                 number,
             } as PointType;
-            StoreState.currentPoint = markData;
-            StoreState.endPoint = markData;
-            // 添加marker
+            StoreState.currentPoint = StoreState.endPoint = markData;
+            // 添加终点marker
             MapObject.endMarker = carTarget;
-            // MapObject.Cmap?.setCenter(center);
-            MapObject.Cmap?.switchFloor(seq_id, rd_fl);
-            this.confirm(true);
-            // 进入选择起点页
+            if (!navigation.isMock) {
+                MapObject.updateEnd?.();
+            }
             CarState.isCarNum = false;
             CarState.isCarBrand = false;
             CarState.isCarStart = true;
             planState.carNav = true;
         },
-        confirm(mock: boolean) {
-            if (!navigation.isMock) {
-                MapObject.previewMarker.hide();
-                navigation.destination(StoreState.endPoint, true);
-                MapObject.endMarker.show(StoreState.endPoint);
-            }
-        }
     },
     render() {
         return (
@@ -486,33 +465,87 @@ export default defineComponent({
                                 <div style={{ width: '3px', height: '3px', background: '#D5D5D5', borderRadius: '50%', margin: '2px' }}></div>
                                 <p style={{ background: '#F17171' }}>终</p>
                             </div>
-                            <div class={detail_locate} style={{ flexDirection: `${this.isTranslate ? 'column-reverse' : 'column'}` }}>
+                            <div class={detail_locate}>
                                 <div>
                                     <input
                                         type="text"
                                         value={StoreState.startPoint?.name}
                                         placeholder="我的位置"
                                         onClick={() => {
-                                            SearchState.isShowSort = true;
-                                            SearchState.isShowSearch = true;
-                                            SelfInputState.isShow = true;
-                                            SearchState.showCloseBtn = true;
+                                            SelfInputState.isShow = !SelfInputState.isShow;
+                                        }}
+                                        onKeypress={e => {
+                                            if (e.keyCode && e.keyCode === 13) {
+                                                // console.log(`搜索历史${e.target?.value}`);
+                                                // @ts-ignore
+                                                searchStore({ name: `${e.target?.value}` }).then(res => {
+                                                    if (res) SelfInputState.historyContent = SelfInputState.historyContent.concat(res);
+                                                })
+                                            }
                                         }}
                                     />
-                                    <div>L2</div>
+                                    {StoreState.startPoint?.fl_name ? <div>{StoreState.startPoint?.fl_name}</div> :
+                                        <div class={select_btn}
+                                            style={{ background: 'linear-gradient(91deg, #95E476, #83D063, #7AC75A)' }}
+                                            onClick={() => {
+                                                if (navigation.isMock) {
+                                                    StoreState.startPoint = StoreState.currentPoint;
+                                                    MapObject.updateStart?.();
+                                                }
+                                            }}
+                                        >
+                                            设为起点
+                                        </div>
+                                    }
                                 </div>
                                 <div>
-                                    <input type="text" value={StoreState.endPoint?.name} readonly />
-                                    <div>L1</div>
+                                    <input type="text"
+                                        value={StoreState.endPoint?.name}
+                                        placeholder="我的位置"
+                                        onClick={() => {
+                                            SelfInputState.isShow = !SelfInputState.isShow;
+                                        }}
+                                        onKeypress={e => {
+                                            if (e.keyCode && e.keyCode === 13) {
+                                                // console.log(`搜索历史${e.target?.value}`);
+                                                // @ts-ignore
+                                                searchStore({ name: `${e.target?.value}` }).then(res => {
+                                                    if (res) SelfInputState.historyContent = SelfInputState.historyContent.concat(res);
+                                                })
+                                            }
+                                        }}
+                                    />
+                                    {StoreState.endPoint?.fl_name ? <div>{StoreState.endPoint?.fl_name}</div> :
+                                        <div class={select_btn}
+                                            style={{ background: 'linear-gradient(91deg, #30adff, #3c8dff, #3c8dff)' }}
+                                            onClick={() => {
+                                                StoreState.endPoint = StoreState.currentPoint;
+                                                MapObject.updateEnd?.();
+                                                MapObject.updateStart?.();//先终点，后起点，最后重新画路线
+                                            }}
+                                        >
+                                            设为终点
+                                        </div>
+                                    }
                                 </div>
                             </div>
-                            <div style={{ marginLeft: '10px' }} onClick={() => { this.isTranslate = !this.isTranslate; }}>
+                            <div style={{ marginLeft: '10px' }} onClick={() => {
+                                let temp = StoreState.endPoint;
+                                navInfoState.isMock = false;
+                                // 更新终点
+                                StoreState.endPoint = StoreState.startPoint;
+                                if (StoreState.endPoint.rdFl) MapObject.updateEnd?.();
+                                // 更新起点
+                                StoreState.startPoint = temp;
+                                if (StoreState.startPoint.rdFl) MapObject.updateStart?.();
+                            }}>
                                 <img src={transformUrl} style={{ width: '20px' }} alt='图片找不到' />
                             </div>
                         </div>
                         {/* <div class={car_tip}>请输入或点击地图选择起点</div> */}
                     </div>
                     <PlanBox />
+                    <SelfInput />
                 </div>
             </div >
         );
