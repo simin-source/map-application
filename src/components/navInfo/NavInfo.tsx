@@ -623,6 +623,7 @@ export class Navigation {
         if (!pathInfo) return;
         navigationEnd.getEndPoint(end.location);
         navInfoState.runMock = this.runMockNav;
+        if (planState.carNav) navInfoState.runMock();
     }
 
     private runMockNav = (text?: string) => {

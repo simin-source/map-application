@@ -24,7 +24,7 @@ import {
 } from './Map.module.scss';
 import { navigationEnd } from '@/components/navigationEnd/NavigationEnd';
 import SortBox, { SortBoxState } from '@/components/sortBox/SortBox';
-import { PointType } from '@/types';
+import Stereoscopic from '@/components/control/stereoscopic/Stereoscopic';
 
 export const MapControlSpace: {
     T?: number;
@@ -70,6 +70,7 @@ export default defineComponent({
                 </Control.LT>
                 <Control.RB space={B}>
                     <Zoom />
+                    <Stereoscopic/>
                 </Control.RB>
                 <Control.LB space={B}>
                     <Floor />
@@ -158,8 +159,8 @@ export default defineComponent({
                 };
                 navInfoState.rdfl = rdFl;
                 StoreState.currentPoint = markData;
-                console.log('判断这个点是否存在');
-                console.log(Cmap.contains(markData.location[0], markData.location[1])); //导致mockStartPoint采用高德
+                // console.log('判断这个点是否存在');
+                // console.log(Cmap.contains(markData.location[0], markData.location[1])); //导致mockStartPoint采用高德
                 MapObject.previewMarker.show(markData);
                 MapObject.currentInfoBox.show(markData);
                 if (SortBoxState.pointList.length > 0) {

@@ -243,11 +243,24 @@ export default defineComponent({
                 // 车位号查询
                 CarState.parkingNum = `${this.defaultCarNum.join('')}`;
                 console.log('车位号寻车' + CarState.parkingNum);
-                carNumber({ number: CarState.parkingNum }).then(res => {
-                    if (res) {
-                        this.showCurrentParking(res[0])
-                    }
-                });
+                // carNumber({ number: CarState.parkingNum }).then(res => {
+                //     if (res) {
+                //         this.showCurrentParking(res[0])
+                //     }
+                // });
+                let test = {
+                    bd_name: "太古汇",
+                    cat_id: 109014001,
+                    center: [99.94352722167969, 15.965194702148438, 0.05999999865889549] as [number, number, number],
+                    fl_id: -3,
+                    fl_name: "P",
+                    index: 514,
+                    name: "普通停车位",
+                    number: "F-441",
+                    rd_fl: 5,
+                    seq_id: 1,
+                };
+                this.showCurrentParking(test);
             } else {
                 // 车牌查询
                 CarState.carBrand = `${this.defaultCph.join('')}`;
@@ -280,8 +293,47 @@ export default defineComponent({
             CarState.isCarNum = false;
             CarState.isCarBrand = false;
             CarState.isCarStart = true;
-            planState.carNav = true;
         },
+        async getRouteInfo() {
+            if (StoreState.startPoint.rdFl && StoreState.endPoint.rdFl) {
+                let pathInfo1 = await MapObject.Cmap?.routeManager.route(StoreState.startPoint.location[0], StoreState.startPoint.location[1], StoreState.startPoint.rdFl, StoreState.endPoint.location[0], StoreState.endPoint.location[1], StoreState.endPoint.rdFl, 0, [0]);
+                let pathInfo2 = await MapObject.Cmap?.routeManager.route(StoreState.startPoint.location[0], StoreState.startPoint.location[1], StoreState.startPoint.rdFl, StoreState.endPoint.location[0], StoreState.endPoint.location[1], StoreState.endPoint.rdFl, 0, [1]);
+                let pathInfo3 = await MapObject.Cmap?.routeManager.route(StoreState.startPoint.location[0], StoreState.startPoint.location[1], StoreState.startPoint.rdFl, StoreState.endPoint.location[0], StoreState.endPoint.location[1], StoreState.endPoint.rdFl, 0, [2]);
+                planState.planContent = planState.planContent.map((item, index) => {
+                    switch (index) {
+                        case 0:
+                            let param1 = {
+                                type: item.type,
+                                img: item.img,
+                                name: item.name,
+                                meter: `${pathInfo1.distance.toFixed(0)}米`,
+                                time: item.time,
+                            }
+                            return param1;
+                        case 1:
+                            let param2 = {
+                                type: item.type,
+                                img: item.img,
+                                name: item.name,
+                                meter: `${pathInfo2.distance.toFixed(0)}米`,
+                                time: item.time,
+                            }
+                            return param2;
+                        case 2:
+                            let param3 = {
+                                type: item.type,
+                                img: item.img,
+                                name: item.name,
+                                meter: `${pathInfo3.distance.toFixed(0)}米`,
+                                time: item.time,
+                            }
+                            return param3;
+                        default:
+                            return item;
+                    }
+                })
+            }
+        }
     },
     render() {
         return (
@@ -490,8 +542,9 @@ export default defineComponent({
                                             onClick={() => {
                                                 if (navigation.isMock) {
                                                     StoreState.startPoint = StoreState.currentPoint;
-                                                    MapObject.updateStart?.();
                                                 }
+                                                this.getRouteInfo();
+                                                planState.carNav = true;
                                             }}
                                         >
                                             设为起点

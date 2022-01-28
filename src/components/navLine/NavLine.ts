@@ -64,12 +64,12 @@ export class NavLine {
             const mock = getStartAndEnd();
             pathInfo = await routeManager.route(mock[0][0], mock[0][1], 1, mock[1][0], mock[1][1], 1, type, connType ? connType : [0]);
         } else {
-            pathInfo = await routeManager.route(sLng, sLat, sRdFl, dLng, dLat, dRdFl, type, [0]);
+            pathInfo = await routeManager.route(sLng, sLat, sRdFl, dLng, dLat, dRdFl, type, connType ? connType : [0]);
         }
-        // console.log('画路线');
-        // console.log(sLng, sLat, sRdFl, dLng, dLat, dRdFl, type);
-        // console.log(pathInfo);
-        // console.log(routeManager.route);
+        console.log('画路线');
+        console.log('connType');
+        console.log(connType);
+        console.log(pathInfo);
         this.routeReady = true;
         this.toggleLine();
         return pathInfo as { distance: number };
